@@ -60,7 +60,7 @@ public class DlgCariPengajuanBarangNonMedis extends javax.swing.JDialog {
             }else if(i==2){
                 column.setPreferredWidth(100);
             }else if(i==3){
-                column.setPreferredWidth(140);
+                column.setPreferredWidth(200);
             }else if(i==4){
                 column.setPreferredWidth(200);
             }

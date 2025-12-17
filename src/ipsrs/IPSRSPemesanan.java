@@ -41,14 +41,14 @@ public class IPSRSPemesanan extends javax.swing.JDialog {
     private IPSRSCariPemesanan form=new IPSRSCariPemesanan(null,false);
     private double ttl=0,y=0,w=0,ttldisk=0,sbttl=0,ppn=0,meterai=0;
     private int jml=0,i=0,row=0,index=0;
-    private String[] kodebarang,namabarang,satuan;
+    private String[] kodebarang,namabarang,satuan,keterangan;
     private double[] harga,jumlah,subtotal,diskon,besardiskon,jmltotal;
     private WarnaTable2 warna=new WarnaTable2();
     public boolean tampikan=true;
     private boolean sukses=true;
     private File file;
     private FileWriter fileWriter;
-    private String Penerimaan_NonMedis="",PPN_Masukan="",Kontra_Penerimaan_NonMedis="";
+    private String iyem;
     private ObjectMapper mapper = new ObjectMapper();
     private JsonNode root;
     private JsonNode response;
@@ -284,6 +284,8 @@ public class IPSRSPemesanan extends javax.swing.JDialog {
         label18 = new widget.Label();
         NoOrder = new widget.TextBox();
         label23 = new widget.Label();
+        Ket = new widget.TextBox();
+        label25 = new widget.Label();
 
         Kd2.setFont(new java.awt.Font("Tahoma", 0, 12)); // NOI18N
         Kd2.setName("Kd2"); // NOI18N
@@ -516,7 +518,7 @@ public class IPSRSPemesanan extends javax.swing.JDialog {
         panelisi1.add(label17);
         label17.setBounds(340, 0, 40, 30);
 
-        tppn.setText("11");
+        tppn.setText("0");
         tppn.setFont(new java.awt.Font("Tahoma", 0, 12)); // NOI18N
         tppn.setName("tppn"); // NOI18N
         tppn.setPreferredSize(new java.awt.Dimension(80, 23));
@@ -758,6 +760,22 @@ public class IPSRSPemesanan extends javax.swing.JDialog {
         panelisi3.add(label23);
         label23.setBounds(0, 70, 75, 23);
 
+        Ket.setName("Ket"); // NOI18N
+        Ket.setPreferredSize(new java.awt.Dimension(207, 23));
+        Ket.addKeyListener(new java.awt.event.KeyAdapter() {
+            public void keyPressed(java.awt.event.KeyEvent evt) {
+                KetKeyPressed(evt);
+            }
+        });
+        panelisi3.add(Ket);
+        Ket.setBounds(410, 70, 350, 23);
+
+        label25.setText("Keterangan :");
+        label25.setName("label25"); // NOI18N
+        label25.setPreferredSize(new java.awt.Dimension(60, 23));
+        panelisi3.add(label25);
+        label25.setBounds(330, 70, 75, 23);
+
         internalFrame1.add(panelisi3, java.awt.BorderLayout.PAGE_START);
 
         getContentPane().add(internalFrame1, java.awt.BorderLayout.CENTER);
@@ -813,10 +831,10 @@ private void KdKeyPressed(java.awt.event.KeyEvent evt) {//GEN-FIRST:event_TKdKey
             if (reply == JOptionPane.YES_OPTION) {
                 Sequel.AutoComitFalse();
                 sukses=true;
-                if(Sequel.menyimpantf2("ipsrspemesanan","?,?,?,?,?,?,?,?,?,?,?,?,?,?","No.Faktur",14,new String[]{
+                if(Sequel.menyimpantf2("ipsrspemesanan","?,?,?,?,?,?,?,?,?,?,?,?,?,?,?","No.Faktur",15,new String[]{
                     NoFaktur.getText(),NoOrder.getText(),kdsup.getText(),kdptg.getText(),Valid.SetTgl(TglPesan.getSelectedItem()+""),
                     Valid.SetTgl(TglFaktur.getSelectedItem()+""),Valid.SetTgl(TglTempo.getSelectedItem()+""),""+sbttl,""+ttldisk,""+ttl,
-                    ""+ppn,""+meterai,""+(ttl+ppn+meterai),"Belum Dibayar"
+                    ""+ppn,""+meterai,""+(ttl+ppn+meterai),"Belum Dibayar",""+Ket.getText()
                 })==true){
                     jml=tbDokter.getRowCount();
                     for(i=0;i<jml;i++){  
@@ -832,7 +850,8 @@ private void KdKeyPressed(java.awt.event.KeyEvent evt) {//GEN-FIRST:event_TKdKey
                                 });
                                 if(tbDokter.getValueAt(i,4).toString().equals("true")&&(akses.getipsrs_barang()==true)){
                                     Sequel.mengedit("ipsrsbarang","kode_brng=?","harga=?",2,new String[]{
-                                        (Double.parseDouble(tbDokter.getValueAt(i,5).toString())+((Double.parseDouble(tppn.getText())/100)*Double.parseDouble(tbDokter.getValueAt(i,5).toString())))+"",tbDokter.getValueAt(i,1).toString()
+                                        //(Double.parseDouble(tbDokter.getValueAt(i,5).toString())+((Double.parseDouble(tppn.getText())/100)*Double.parseDouble(tbDokter.getValueAt(i,5).toString())))+"",tbDokter.getValueAt(i,1).toString()
+                                        (Double.parseDouble(tbDokter.getValueAt(i,5).toString()))+"",tbDokter.getValueAt(i,1).toString() 
                                     }); 
                                 }
                             }else{
@@ -846,20 +865,12 @@ private void KdKeyPressed(java.awt.event.KeyEvent evt) {//GEN-FIRST:event_TKdKey
                    
                 if(sukses==true){
                     Sequel.queryu("delete from tampjurnal");
-                    if(Sequel.menyimpantf2("tampjurnal","?,?,?,?",4,new String[]{Penerimaan_NonMedis,"PERSEDIAAN BARANG NON MEDIS",""+(ttl+meterai),"0"})==false){
-                        sukses=false;
-                    }
+                    Sequel.menyimpan("tampjurnal","?,?,?,?",4,new String[]{Sequel.cariIsi("select Penerimaan_NonMedis from set_akun"),"PERSEDIAAN BARANG NON MEDIS",""+(ttl+meterai),"0"});
                     if(ppn>0){
-                        if(Sequel.menyimpantf2("tampjurnal","?,?,?,?",4,new String[]{PPN_Masukan,"PPN Masukan Barang Non Medis",""+ppn,"0"})==false){
-                            sukses=false;
-                        }
+                        Sequel.menyimpan2("tampjurnal","?,?,?,?",4,new String[]{Sequel.cariIsi("select set_akun.PPN_Masukan from set_akun"),"PPN Masukan Barang Non Medis",""+ppn,"0"});
                     }
-                    if(Sequel.menyimpantf2("tampjurnal","?,?,?,?",4,new String[]{Kontra_Penerimaan_NonMedis,"HUTANG BARANG NON MEDIS","0",""+(ttl+ppn+meterai)})==false){
-                        sukses=false;
-                    }
-                    if(sukses==true){
-                        sukses=jur.simpanJurnal(NoFaktur.getText(),"U","PENERIMAAN BARANG NON MEDIS/PENUNJANG"+", OLEH "+akses.getkode());
-                    }
+                    Sequel.menyimpan("tampjurnal","?,?,?,?",4,new String[]{Sequel.cariIsi("select Kontra_Penerimaan_NonMedis from set_akun"),"HUTANG BARANG NON MEDIS","0",""+(ttl+ppn+meterai)}); 
+                    sukses=jur.simpanJurnal(NoFaktur.getText(),"U","PENERIMAAN BARANG NON MEDIS/PENUNJANG"+", OLEH "+akses.getkode());
                 }
                 
                 if(sukses==true){
@@ -872,6 +883,7 @@ private void KdKeyPressed(java.awt.event.KeyEvent evt) {//GEN-FIRST:event_TKdKey
                         tbDokter.setValueAt(0,i,7);
                         tbDokter.setValueAt(0,i,8);
                         tbDokter.setValueAt(0,i,9);
+                        Ket.setText("");
                     }
                     Meterai.setText("0");
                     getData();
@@ -933,6 +945,7 @@ private void ppBersihkanActionPerformed(java.awt.event.ActionEvent evt) {//GEN-F
                 tbDokter.setValueAt(0,i,7);
                 tbDokter.setValueAt(0,i,8);
                 tbDokter.setValueAt(0,i,9);
+                Ket.setText("");
             }
 }//GEN-LAST:event_ppBersihkanActionPerformed
 
@@ -1053,15 +1066,6 @@ private void btnPetugasActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FI
             } catch (Exception e) {
             }
         }
-        
-        try {
-            if(Valid.daysOld("./cache/akunpemesananipsrs.iyem")<8){
-                tampilAkun2();
-            }else{
-                tampilAkun();
-            }
-        } catch (Exception e) {
-        }
     }//GEN-LAST:event_formWindowOpened
 
     private void BtnTambahActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_BtnTambahActionPerformed
@@ -1121,12 +1125,12 @@ private void btnPetugasActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FI
     private void BtnAllActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_BtnAllActionPerformed
         TCari.setText("");
         tampil();
-        tampilAkun();
         LSubtotal.setText("0");
         LPotongan.setText("0");
         LTotal2.setText("0");
         LPpn.setText("0");
         LTagiha.setText("0");
+        Ket.setText("");
     }//GEN-LAST:event_BtnAllActionPerformed
 
     private void BtnAllKeyPressed(java.awt.event.KeyEvent evt) {//GEN-FIRST:event_BtnAllKeyPressed
@@ -1136,6 +1140,10 @@ private void btnPetugasActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FI
             Valid.pindah(evt, BtnCari, TCari);
         }
     }//GEN-LAST:event_BtnAllKeyPressed
+
+    private void KetKeyPressed(java.awt.event.KeyEvent evt) {//GEN-FIRST:event_KetKeyPressed
+        // TODO add your handling code here:
+    }//GEN-LAST:event_KetKeyPressed
 
     /**
     * @param args the command line arguments
@@ -1161,6 +1169,7 @@ private void btnPetugasActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FI
     private widget.Button BtnSimpan;
     private widget.Button BtnTambah;
     private widget.TextBox Kd2;
+    private widget.TextBox Ket;
     private widget.Label LPotongan;
     private widget.Label LPpn;
     private widget.Label LSubtotal;
@@ -1193,6 +1202,7 @@ private void btnPetugasActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FI
     private widget.Label label22;
     private widget.Label label23;
     private widget.Label label24;
+    private widget.Label label25;
     private widget.Label label9;
     private widget.TextBox nmptg;
     private widget.TextBox nmsup;
@@ -1210,7 +1220,7 @@ private void btnPetugasActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FI
             file=new File("./cache/penerimaanipsrs.iyem");
             file.createNewFile();
             fileWriter = new FileWriter(file);
-            StringBuilder iyembuilder = new StringBuilder();
+            iyem="";
             ps=koneksi.prepareStatement(
                     "select ipsrsbarang.kode_brng, concat(ipsrsbarang.nama_brng,' (',ipsrsbarang.jenis,')'),ipsrsbarang.kode_sat,ipsrsbarang.harga "+
                     " from ipsrsbarang where ipsrsbarang.status='1' order by ipsrsbarang.nama_brng");
@@ -1218,7 +1228,7 @@ private void btnPetugasActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FI
                 rs=ps.executeQuery();
                 while(rs.next()){
                     tabMode.addRow(new Object[]{"",rs.getString(1),rs.getString(2),rs.getString(3),false,rs.getDouble(4),0,0,0,0});
-                    iyembuilder.append("{\"KodeBarang\":\""+rs.getString(1)+"\",\"NamaBarang\":\""+rs.getString(2).replaceAll("\"","")+"\",\"Satuan\":\""+rs.getString(3)+"\",\"HrgBeli\":\""+rs.getString(4)+"\"},");
+                    iyem=iyem+"{\"KodeBarang\":\""+rs.getString(1)+"\",\"NamaBarang\":\""+rs.getString(2).replaceAll("\"","")+"\",\"Satuan\":\""+rs.getString(3)+"\",\"HrgBeli\":\""+rs.getString(4)+"\"},";
                 }   
             }catch(Exception e){
                 System.out.println(e);
@@ -1229,16 +1239,11 @@ private void btnPetugasActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FI
                 if(ps!=null){
                     ps.close();
                 }
-            }           
-            
-            if (iyembuilder.length() > 0) {
-                iyembuilder.setLength(iyembuilder.length() - 1);
-                fileWriter.write("{\"penerimaanipsrs\":["+iyembuilder+"]}");
-                fileWriter.flush();
-            }
-            
+            }             
+            fileWriter.write("{\"penerimaanipsrs\":["+iyem.substring(0,iyem.length()-1)+"]}");
+            fileWriter.flush();
             fileWriter.close();
-            iyembuilder=null;
+            iyem=null;  
         }catch(Exception e){
             System.out.println("Notifikasi : "+e);
         }
@@ -1292,17 +1297,6 @@ private void btnPetugasActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FI
                 tabMode.addRow(new Object[]{jumlah[i],kodebarang[i],namabarang[i],satuan[i],ganti[i],harga[i],subtotal[i],diskon[i],besardiskon[i],jmltotal[i]});
             }
             
-            kodebarang=null;
-            namabarang=null;
-            satuan=null;
-            harga=null;
-            jumlah=null;
-            subtotal=null;
-            diskon=null;
-            besardiskon=null;
-            jmltotal=null;
-            ganti=null;
-            
             myObj = new FileReader("./cache/penerimaanipsrs.iyem");
             root = mapper.readTree(myObj);
             response = root.path("penerimaanipsrs");
@@ -1343,13 +1337,13 @@ private void btnPetugasActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FI
                     tbDokter.setValueAt(0,row,6);   
                     tbDokter.setValueAt(0,row,7);   
                     tbDokter.setValueAt(0,row,8);                
-                    tbDokter.setValueAt(0,row,9);    
+                    tbDokter.setValueAt(0,row,9);
                 } 
             }else{
                 tbDokter.setValueAt(0,row,6);   
                 tbDokter.setValueAt(0,row,7);   
                 tbDokter.setValueAt(0,row,8);                
-                tbDokter.setValueAt(0,row,9);   
+                tbDokter.setValueAt(0,row,9);
             }               
         }
         ttl=0;sbttl=0;ttldisk=0;
@@ -1389,7 +1383,7 @@ private void btnPetugasActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FI
     public void isCek(){
         autoNomor();
         TCari.requestFocus();
-        tppn.setText("11");
+        tppn.setText("0");
         Meterai.setText("0");
         if(akses.getjml2()>=1){
             kdptg.setEditable(false);
@@ -1412,6 +1406,7 @@ private void btnPetugasActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FI
         meterai=Sequel.cariIsiAngka("select surat_pemesanan_non_medis.meterai from surat_pemesanan_non_medis where surat_pemesanan_non_medis.no_pemesanan=?",noorder);
         ppn=Sequel.cariIsiAngka("select surat_pemesanan_non_medis.ppn from surat_pemesanan_non_medis where surat_pemesanan_non_medis.no_pemesanan=?",noorder);
         Meterai.setText(Valid.SetAngka2(meterai));
+        Ket.setText(Sequel.cariIsi("select surat_pemesanan_non_medis.keterangan from surat_pemesanan_non_medis where surat_pemesanan_non_medis.no_pemesanan=?",noorder));
         try{
             Valid.tabelKosong(tabMode);
             ps=koneksi.prepareStatement(
@@ -1432,6 +1427,7 @@ private void btnPetugasActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FI
                     });
                 } 
                 getData();
+                Ket.setText(rs.getString("keterangan"));
             } catch (Exception e) {
                 System.out.println("Notifikasi : "+e);
             } finally{
@@ -1446,52 +1442,5 @@ private void btnPetugasActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FI
             System.out.println("Notifikasi : "+e);
         }
     }
-    
-    private void tampilAkun() {         
-         try{      
-             ps=koneksi.prepareStatement("select set_akun.Penerimaan_NonMedis,set_akun.PPN_Masukan,set_akun.Kontra_Penerimaan_NonMedis from set_akun");
-             try{
-                 rs=ps.executeQuery();
-                 if(rs.next()){    
-                     Penerimaan_NonMedis=rs.getString("Penerimaan_NonMedis");
-                     PPN_Masukan=rs.getString("PPN_Masukan");
-                     Kontra_Penerimaan_NonMedis=rs.getString("Kontra_Penerimaan_NonMedis");
-                     file=new File("./cache/akunpemesananipsrs.iyem");
-                     file.createNewFile();
-                     fileWriter = new FileWriter(file);
-                     fileWriter.write("{\"Penerimaan_NonMedis\":\""+Penerimaan_NonMedis+"\",\"PPN_Masukan\":\""+PPN_Masukan+"\",\"Kontra_Penerimaan_NonMedis\":\""+Kontra_Penerimaan_NonMedis+"\"}");
-                     fileWriter.flush();
-                     fileWriter.close();
-                 }
-             }catch (Exception e) {
-                 System.out.println("Notifikasi : "+e);
-             } finally{
-                 if(rs != null){
-                     rs.close();
-                 } 
-                 if(ps != null){
-                     ps.close();
-                 } 
-             }
-        } catch (Exception e) {
-            System.out.println("Notifikasi : "+e);
-        }
-    }
-    
-    private void tampilAkun2() {
-        try {
-            myObj = new FileReader("./cache/akunpemesananipsrs.iyem");
-            root = mapper.readTree(myObj);
-            Penerimaan_NonMedis=root.path("Penerimaan_NonMedis").asText();
-            PPN_Masukan=root.path("PPN_Masukan").asText();
-            Kontra_Penerimaan_NonMedis=root.path("Kontra_Penerimaan_NonMedis").asText();
-            myObj.close();
-        } catch (Exception ex) {
-            if(ex.toString().contains("java.io.FileNotFoundException")){
-                tampilAkun();
-            }else{
-                System.out.println("Notifikasi : "+ex);
-            }
-        }
-    } 
+ 
 }

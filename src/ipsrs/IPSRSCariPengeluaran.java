@@ -47,7 +47,7 @@ public class IPSRSCariPengeluaran extends javax.swing.JDialog {
         super(parent, modal);
         initComponents();
 
-        tabMode=new DefaultTableModel(null,new Object[]{"Tgl.Keluar","No.Keluar","Keterangan","Petugas","Barang","Satuan","Jml","Harga(Rp)","Total(Rp)"}){
+        tabMode=new DefaultTableModel(null,new Object[]{"Tgl.Keluar","No.Keluar","Keterangan","Petugas","Barang","Satuan","Jenis","Jml","Harga(Rp)","Total(Rp)"}){
               @Override public boolean isCellEditable(int rowIndex, int colIndex){return false;}
         };
         tbDokter.setModel(tabMode);
@@ -55,14 +55,14 @@ public class IPSRSCariPengeluaran extends javax.swing.JDialog {
         tbDokter.setPreferredScrollableViewportSize(new Dimension(800,800));
         tbDokter.setAutoResizeMode(JTable.AUTO_RESIZE_OFF);
 
-        for (i = 0; i < 9; i++) {
+        for (i = 0; i < 10; i++) {
             TableColumn column = tbDokter.getColumnModel().getColumn(i);
             if(i==0){
                 column.setPreferredWidth(70);
             }else if(i==1){
                 column.setPreferredWidth(110);
             }else if(i==2){
-                column.setPreferredWidth(150);
+                column.setPreferredWidth(250);
             }else if(i==3){
                 column.setPreferredWidth(180);
             }else if(i==4){
@@ -70,10 +70,12 @@ public class IPSRSCariPengeluaran extends javax.swing.JDialog {
             }else if(i==5){
                 column.setPreferredWidth(80);
             }else if(i==6){
-                column.setPreferredWidth(40);
-            }else if(i==7){
                 column.setPreferredWidth(90);
+            }else if(i==7){
+                column.setPreferredWidth(40);
             }else if(i==8){
+                column.setPreferredWidth(90);
+            }else if(i==9){
                 column.setPreferredWidth(100);
             }
         }
@@ -81,14 +83,14 @@ public class IPSRSCariPengeluaran extends javax.swing.JDialog {
 
         tabMode2=new DefaultTableModel(null,new Object[]{
                 "No.Keluar","Tanggal","NIP","Petugas","Keterangan","Kode Barang",
-                "Nama Barang","Satuan","Jml","Harga(Rp)","Total(Rp)"
+                "Nama Barang","Satuan","Jenis","Jml","Harga(Rp)","Total(Rp)"
             }){
               @Override public boolean isCellEditable(int rowIndex, int colIndex){return false;}
              Class[] types = new Class[] {
                 java.lang.String.class,java.lang.String.class,java.lang.String.class,
                 java.lang.String.class,java.lang.String.class,java.lang.String.class,
-                java.lang.String.class,java.lang.String.class,java.lang.Double.class,
-                java.lang.Double.class,java.lang.Double.class
+                java.lang.String.class,java.lang.String.class,java.lang.String.class,
+                java.lang.Double.class,java.lang.Double.class,java.lang.Double.class
              };
              @Override
              public Class getColumnClass(int columnIndex) {
@@ -100,29 +102,31 @@ public class IPSRSCariPengeluaran extends javax.swing.JDialog {
         tbDokter2.setPreferredScrollableViewportSize(new Dimension(800,800));
         tbDokter2.setAutoResizeMode(JTable.AUTO_RESIZE_OFF);
 
-        for (i = 0; i < 11; i++) {
+        for (i = 0; i < 12; i++) {
             TableColumn column = tbDokter2.getColumnModel().getColumn(i);
             if(i==0){
                 column.setPreferredWidth(100);
             }else if(i==1){
                 column.setPreferredWidth(70);
             }else if(i==2){
-                column.setPreferredWidth(90);
+                column.setPreferredWidth(50);
             }else if(i==3){
                 column.setPreferredWidth(160);
             }else if(i==4){
-                column.setPreferredWidth(130);
+                column.setPreferredWidth(250);
             }else if(i==5){
                 column.setPreferredWidth(80);
             }else if(i==6){
-                column.setPreferredWidth(160);
+                column.setPreferredWidth(210);
             }else if(i==7){
                 column.setPreferredWidth(60);
             }else if(i==8){
-                column.setPreferredWidth(30);
+                column.setPreferredWidth(80);
             }else if(i==9){
-                column.setPreferredWidth(90);
+                column.setPreferredWidth(30);
             }else if(i==10){
+                column.setPreferredWidth(90);
+            }else if(i==11){
                 column.setPreferredWidth(105);
             }
         }
@@ -282,6 +286,8 @@ public class IPSRSCariPengeluaran extends javax.swing.JDialog {
         BtnCari = new widget.Button();
         label9 = new widget.Label();
         LTotal = new widget.Label();
+        label14 = new widget.Label();
+        LTotal1 = new widget.Label();
         BtnAll = new widget.Button();
         BtnPrint = new widget.Button();
         BtnKeluar = new widget.Button();
@@ -384,9 +390,22 @@ public class IPSRSCariPengeluaran extends javax.swing.JDialog {
 
         LTotal.setHorizontalAlignment(javax.swing.SwingConstants.LEFT);
         LTotal.setText("0");
+        LTotal.setMaximumSize(new java.awt.Dimension(100, 14));
+        LTotal.setMinimumSize(new java.awt.Dimension(100, 14));
         LTotal.setName("LTotal"); // NOI18N
-        LTotal.setPreferredSize(new java.awt.Dimension(120, 30));
+        LTotal.setPreferredSize(new java.awt.Dimension(100, 30));
         panelisi1.add(LTotal);
+
+        label14.setText("Total Jenis :");
+        label14.setName("label14"); // NOI18N
+        label14.setPreferredSize(new java.awt.Dimension(61, 30));
+        panelisi1.add(label14);
+
+        LTotal1.setHorizontalAlignment(javax.swing.SwingConstants.LEFT);
+        LTotal1.setText("0");
+        LTotal1.setName("LTotal1"); // NOI18N
+        LTotal1.setPreferredSize(new java.awt.Dimension(30, 30));
+        panelisi1.add(LTotal1);
 
         BtnAll.setIcon(new javax.swing.ImageIcon(getClass().getResource("/picture/Search-16x16.png"))); // NOI18N
         BtnAll.setMnemonic('M');
@@ -649,6 +668,7 @@ public class IPSRSCariPengeluaran extends javax.swing.JDialog {
         scrollPane2.setName("scrollPane2"); // NOI18N
         scrollPane2.setOpaque(true);
 
+        tbDokter2.setAutoCreateRowSorter(true);
         tbDokter2.setModel(new javax.swing.table.DefaultTableModel(
             new Object [][] {
                 {},
@@ -818,12 +838,14 @@ private void KdKeyPressed(java.awt.event.KeyEvent evt) {//GEN-FIRST:event_TKdKey
                                     tabMode.getValueAt(i,4).toString()+"','"+
                                     tabMode.getValueAt(i,5).toString()+"','"+
                                     tabMode.getValueAt(i,6).toString()+"','"+
-                                    tabMode.getValueAt(i,8).toString()+"','','','','','','','','','','','','','','','','','','','','','','','','','','','','','"+akses.getalamatip()+"'","Transaksi Pengeluaran"); 
+                                    tabMode.getValueAt(i,7).toString()+"','"+
+                                    tabMode.getValueAt(i,8).toString()+"','"+
+                                    tabMode.getValueAt(i,9).toString()+"','','','','','','','','','','','','','','','','','','','','','','','','','','','"+akses.getalamatip()+"'","Transaksi Pengeluaran"); 
                 }
                 i++;
                 Sequel.menyimpan("temporary","'"+i+"','','','','','','','','','','','','','','','','','','','','','','','','','','','','','','','','','','','','','"+akses.getalamatip()+"'","Transaksi Pembelian"); 
                 i++;
-                Sequel.menyimpan("temporary","'"+i+"','Jml.Total :','','','','','','','"+LTotal.getText()+"','','','','','','','','','','','','','','','','','','','','','','','','','','','','','"+akses.getalamatip()+"'","Transaksi Pembelian"); 
+                Sequel.menyimpan("temporary","'"+i+"','Jml.Total :','','','','','','','','','"+LTotal.getText()+"','','','','','','','','','','','','','','','','','','','','','','','','','','','"+akses.getalamatip()+"'","Transaksi Pembelian"); 
                 
                 Map<String, Object> param = new HashMap<>();    
                     param.put("namars",akses.getnamars());
@@ -896,15 +918,9 @@ private void ppHapusActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST
                total=total+rs2.getDouble("total");
             }         
             Sequel.queryu("delete from tampjurnal");
-            if(Sequel.menyimpantf2("tampjurnal","?,?,?,?",4,new String[]{Sequel.cariIsi("select Stok_Keluar_Ipsrs from set_akun"),"PERSEDIAAN BARANG","0",""+total})==false){
-                sukses=false;
-            }
-            if(Sequel.menyimpantf2("tampjurnal","?,?,?,?",4,new String[]{Sequel.cariIsi("select Kontra_Stok_Keluar_Ipsrs from set_akun"),"KAS DI TANGAN",""+total,"0"})==false){
-                sukses=false;
-            }
-            if(sukses==true){
-                sukses=jur.simpanJurnal(tbDokter.getValueAt(tbDokter.getSelectedRow(),1).toString(),"U","PEMBATALAN PENGGUNAAN BARANG NON MEDIS"+", OLEH "+akses.getkode());
-            }
+            Sequel.menyimpan("tampjurnal","?,?,?,?",4,new String[]{Sequel.cariIsi("select Stok_Keluar_Ipsrs from set_akun"),"PERSEDIAAN BARANG","0",""+total});
+            Sequel.menyimpan("tampjurnal","?,?,?,?",4,new String[]{Sequel.cariIsi("select Kontra_Stok_Keluar_Ipsrs from set_akun"),"KAS DI TANGAN",""+total,"0"}); 
+            sukses=jur.simpanJurnal(tbDokter.getValueAt(tbDokter.getSelectedRow(),1).toString(),"U","PEMBATALAN PENGGUNAAN BARANG NON MEDIS"+", OLEH "+akses.getkode());
             
             if(sukses==true){
                 Sequel.queryu2("delete from ipsrspengeluaran where no_keluar=?",1,new String[]{tbDokter.getValueAt(tbDokter.getSelectedRow(),1).toString()});
@@ -982,6 +998,7 @@ private void ppHapusActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST
     private widget.Button BtnKeluar;
     private widget.Button BtnPrint;
     private widget.Label LTotal;
+    private widget.Label LTotal1;
     private widget.TextBox NoKeluar;
     private widget.TextBox TCari;
     private javax.swing.JTabbedPane TabRawat;
@@ -1000,6 +1017,7 @@ private void ppHapusActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST
     private widget.Label label11;
     private widget.Label label12;
     private widget.Label label13;
+    private widget.Label label14;
     private widget.Label label15;
     private widget.Label label17;
     private widget.Label label7;
@@ -1052,8 +1070,9 @@ private void ppHapusActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST
                     tabMode.addRow(new Object[]{rs.getString(1),rs.getString(2),rs.getString(3),rs.getString(4)+", "+rs.getString(5),"Stok Keluar :","","","","",""});    
                     ps2=koneksi.prepareStatement(
                         "select ipsrsdetailpengeluaran.kode_brng,ipsrsbarang.nama_brng, ipsrsdetailpengeluaran.kode_sat,kodesatuan.satuan,"+
-                        "ipsrsdetailpengeluaran.jumlah,ipsrsdetailpengeluaran.harga,ipsrsdetailpengeluaran.total "+
+                        "ipsrsjenisbarang.nm_jenis,ipsrsdetailpengeluaran.jumlah,ipsrsdetailpengeluaran.harga,ipsrsdetailpengeluaran.total "+
                         "from ipsrsdetailpengeluaran inner join ipsrsbarang on ipsrsdetailpengeluaran.kode_brng=ipsrsbarang.kode_brng "+
+                        "inner join ipsrsjenisbarang on ipsrsbarang.jenis=ipsrsjenisbarang.kd_jenis "+
                         "inner join kodesatuan on ipsrsdetailpengeluaran.kode_sat=kodesatuan.kode_sat "+
                         "where ipsrsdetailpengeluaran.no_keluar=? and ipsrsbarang.nama_brng like ? and ipsrsbarang.jenis like ? and "+
                         "(ipsrsdetailpengeluaran.kode_brng like ? or ipsrsbarang.nama_brng like ? or ipsrsdetailpengeluaran.kode_sat like ? or "+
@@ -1070,13 +1089,13 @@ private void ppHapusActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST
                         int no=1;
                         tagihan=0;
                         while(rs2.next()){
-                            tagihan=tagihan+rs2.getDouble(7);
-                            ttltagihan=ttltagihan+rs2.getDouble(7);
+                            tagihan=tagihan+rs2.getDouble(8);
+                            ttltagihan=ttltagihan+rs2.getDouble(8);
                             tabMode.addRow(new Object[]{"","","","",no+". "+rs2.getString(1)+", "+rs2.getString(2),
-                                            rs2.getString(3)+", "+rs2.getString(4),rs2.getString(5),Valid.SetAngka(rs2.getDouble(6)),Valid.SetAngka(rs2.getDouble(7))});
+                                            rs2.getString(3),rs2.getString(5),Valid.SetAngka(rs2.getDouble(6)),Valid.SetAngka(rs2.getDouble(7)),Valid.SetAngka(rs2.getDouble(8))});
                             no++;
                         }
-                        tabMode.addRow(new Object[]{"","","","","Total ","","","",Valid.SetAngka(tagihan)});
+                        tabMode.addRow(new Object[]{"","","","","Total ","","","","",Valid.SetAngka(tagihan)});                        
                     } catch (Exception e) {
                         System.out.println("Notif2 : "+e);
                     } finally{
@@ -1088,7 +1107,9 @@ private void ppHapusActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST
                         }
                     }
                 }
-                LTotal.setText(""+Valid.SetAngka(ttltagihan));
+                LTotal.setText(""+Valid.SetAngka(ttltagihan));    
+                int totalRows = tabMode.getRowCount() -2;
+                LTotal1.setText("" + totalRows); // Tampilkan hasilnya  
             } catch (Exception e) {
                 System.out.println("Notif : "+e);
             } finally{
@@ -1120,11 +1141,12 @@ private void ppHapusActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST
             ps=koneksi.prepareStatement(
                     "select ipsrspengeluaran.no_keluar,ipsrspengeluaran.tanggal,ipsrspengeluaran.nip,"+
                     "ipsrspengeluaran.keterangan,petugas.nama,ipsrsdetailpengeluaran.kode_brng,"+
-                    "ipsrsbarang.nama_brng,kodesatuan.satuan,ipsrsdetailpengeluaran.jumlah,"+
+                    "ipsrsbarang.nama_brng,ipsrsjenisbarang.nm_jenis,kodesatuan.satuan,ipsrsdetailpengeluaran.jumlah,"+
                     "ipsrsdetailpengeluaran.harga,ipsrsdetailpengeluaran.total from ipsrspengeluaran "+
-                    "inner join ipsrsdetailpengeluaran on ipsrspengeluaran.no_keluar=ipsrsdetailpengeluaran.no_keluar "+
+                    "inner join ipsrsdetailpengeluaran on ipsrspengeluaran.no_keluar=ipsrsdetailpengeluaran.no_keluar "+                    
                     "inner join petugas on ipsrspengeluaran.nip=petugas.nip "+
-                    "inner join ipsrsbarang on ipsrsdetailpengeluaran.kode_brng=ipsrsbarang.kode_brng "+
+                    "inner join ipsrsbarang on ipsrsdetailpengeluaran.kode_brng=ipsrsbarang.kode_brng "+                    
+                    "inner join ipsrsjenisbarang on ipsrsbarang.jenis=ipsrsjenisbarang.kd_jenis "+
                     "inner join kodesatuan on ipsrsdetailpengeluaran.kode_sat=kodesatuan.kode_sat "+
                     "where ipsrspengeluaran.tanggal between ? and ? and ipsrspengeluaran.no_keluar like ? and petugas.nama like ?  and ipsrsbarang.jenis like ? and ipsrsbarang.nama_brng like ? and "+
                     "(ipsrspengeluaran.no_keluar like ? or ipsrspengeluaran.keterangan like ? or ipsrspengeluaran.nip like ? or petugas.nama like ? or ipsrsbarang.jenis like ? or "+
@@ -1153,11 +1175,13 @@ private void ppHapusActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST
                     tabMode2.addRow(new Object[]{
                         rs.getString("no_keluar"),rs.getString("tanggal"),rs.getString("nip"),
                         rs.getString("nama"),rs.getString("keterangan"),rs.getString("kode_brng"),
-                        rs.getString("nama_brng"),rs.getString("satuan"),rs.getDouble("jumlah"),
-                        rs.getDouble("harga"),rs.getDouble("total")
+                        rs.getString("nama_brng"),rs.getString("satuan"),rs.getString("nm_jenis"),
+                        rs.getDouble("jumlah"),rs.getDouble("harga"),rs.getDouble("total")
                     });
                 }
                 LTotal.setText(""+Valid.SetAngka(ttltagihan));
+                int totalRows = tabMode2.getRowCount(); // Kurangi 2 dari total baris
+                LTotal1.setText("" + totalRows); // Tampilkan hasilnya
             } catch (Exception e) {
                 System.out.println("Notif : "+e);
             } finally{
