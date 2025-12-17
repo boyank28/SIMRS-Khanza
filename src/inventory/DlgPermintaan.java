@@ -21,8 +21,11 @@ import java.io.FileWriter;
 import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
 import javax.swing.JOptionPane;
 import javax.swing.JTable;
+import javax.swing.SwingUtilities;
 import javax.swing.event.DocumentEvent;
 import javax.swing.table.DefaultTableModel;
 import javax.swing.table.TableColumn;
@@ -41,11 +44,13 @@ public class DlgPermintaan extends javax.swing.JDialog {
     private boolean sukses=true;
     private File file;
     private FileWriter fileWriter;
-    private String iyem,DEPOAKTIFOBAT="";
+    private String DEPOAKTIFOBAT="";
     private ObjectMapper mapper = new ObjectMapper();
     private JsonNode root;
     private JsonNode response;
     private FileReader myObj;
+    private final ExecutorService executor = Executors.newSingleThreadExecutor();
+    private volatile boolean ceksukses = false;
     /** Creates new form DlgProgramStudi
      * @param parent
      * @param modal */
@@ -100,19 +105,19 @@ public class DlgPermintaan extends javax.swing.JDialog {
                 @Override
                 public void insertUpdate(DocumentEvent e) {
                     if(TCari.getText().length()>2){
-                        tampil2();
+                        runBackground(() ->tampil2());
                     }
                 }
                 @Override
                 public void removeUpdate(DocumentEvent e) {
                     if(TCari.getText().length()>2){
-                        tampil2();
+                        runBackground(() ->tampil2());
                     }
                 }
                 @Override
                 public void changedUpdate(DocumentEvent e) {
                     if(TCari.getText().length()>2){
-                        tampil2();
+                        runBackground(() ->tampil2());
                     }
                 }
             });
@@ -701,7 +706,7 @@ private void KdKeyPressed(java.awt.event.KeyEvent evt) {//GEN-FIRST:event_TKdKey
 
 private void TCariKeyPressed(java.awt.event.KeyEvent evt) {//GEN-FIRST:event_TCariKeyPressed
         if(evt.getKeyCode()==KeyEvent.VK_ENTER){
-            tampil2();
+            runBackground(() ->tampil2());
         }else if(evt.getKeyCode()==KeyEvent.VK_PAGE_DOWN){
             BtnCari1.requestFocus();
         }else if(evt.getKeyCode()==KeyEvent.VK_PAGE_UP){
@@ -712,12 +717,12 @@ private void TCariKeyPressed(java.awt.event.KeyEvent evt) {//GEN-FIRST:event_TCa
 }//GEN-LAST:event_TCariKeyPressed
 
 private void BtnCari1ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_BtnCari1ActionPerformed
-        tampil2();
+        runBackground(() ->tampil2());
 }//GEN-LAST:event_BtnCari1ActionPerformed
 
 private void BtnCari1KeyPressed(java.awt.event.KeyEvent evt) {//GEN-FIRST:event_BtnCari1KeyPressed
         if(evt.getKeyCode()==KeyEvent.VK_SPACE){
-            tampil2();
+            runBackground(() ->tampil2());
         }else{
             Valid.pindah(evt, BtnSimpan, BtnKeluar);
         }
@@ -758,10 +763,10 @@ private void tbDokterKeyPressed(java.awt.event.KeyEvent evt) {//GEN-FIRST:event_
     private void formWindowOpened(java.awt.event.WindowEvent evt) {//GEN-FIRST:event_formWindowOpened
         try {
             if(Valid.daysOld("./cache/permintaanobat.iyem")<8){
-                tampil2();
+                runBackground(() ->tampil2());
             }else{
                 tampil();
-                tampil2();
+                runBackground(() ->tampil2());
             }
         } catch (Exception e) {
         }
@@ -864,7 +869,7 @@ private void tbDokterKeyPressed(java.awt.event.KeyEvent evt) {//GEN-FIRST:event_
     private void BtnAllActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_BtnAllActionPerformed
         TCari.setText("");
         tampil();
-        tampil2();
+        runBackground(() ->tampil2());
     }//GEN-LAST:event_BtnAllActionPerformed
 
     private void BtnAllKeyPressed(java.awt.event.KeyEvent evt) {//GEN-FIRST:event_BtnAllKeyPressed
@@ -931,7 +936,7 @@ private void tbDokterKeyPressed(java.awt.event.KeyEvent evt) {//GEN-FIRST:event_
             file=new File("./cache/permintaanobat.iyem");
             file.createNewFile();
             fileWriter = new FileWriter(file);
-            iyem="";
+            StringBuilder iyembuilder = new StringBuilder();
             ps=koneksi.prepareStatement(
                 "select databarang.kode_brng,databarang.nama_brng,databarang.kode_sat,jenis.nama,"+
                 "kategori_barang.nama as kategori,golongan_barang.nama as golongan "+
@@ -942,7 +947,7 @@ private void tbDokterKeyPressed(java.awt.event.KeyEvent evt) {//GEN-FIRST:event_
             try {
                 rs=ps.executeQuery();
                 while(rs.next()){
-                    iyem=iyem+"{\"KodeBarang\":\""+rs.getString(1)+"\",\"NamaBarang\":\""+rs.getString(2).replaceAll("\"","")+"\",\"Satuan\":\""+rs.getString(3)+"\",\"JenisObat\":\""+rs.getString(4)+"\",\"Kategori\":\""+rs.getString(5)+"\",\"Golongan\":\""+rs.getString(6)+"\"},";
+                    iyembuilder.append("{\"KodeBarang\":\"").append(rs.getString(1)).append("\",\"NamaBarang\":\"").append(rs.getString(2).replaceAll("\"","")).append("\",\"Satuan\":\"").append(rs.getString(3)).append("\",\"JenisObat\":\"").append(rs.getString(4)).append("\",\"Kategori\":\"").append(rs.getString(5)).append("\",\"Golongan\":\"").append(rs.getString(6)).append("\"},");
                 } 
             } catch (Exception e) {
                 System.out.println("Notifikasi : "+e);
@@ -954,14 +959,18 @@ private void tbDokterKeyPressed(java.awt.event.KeyEvent evt) {//GEN-FIRST:event_
                     ps.close();
                 }
             }       
-            fileWriter.write("{\"permintaanobat\":["+iyem.substring(0,iyem.length()-1)+"]}");
-            fileWriter.flush();
+            
+            if (iyembuilder.length() > 0) {
+                iyembuilder.setLength(iyembuilder.length() - 1);
+                fileWriter.write("{\"permintaanobat\":["+iyembuilder+"]}");
+                fileWriter.flush();
+            }
+            
             fileWriter.close();
-            iyem=null; 
+            iyembuilder=null;
         }catch(Exception e){
             System.out.println("Notifikasi : "+e);
         }
-        
     }
     
     private void tampil2() {
@@ -974,22 +983,15 @@ private void tbDokterKeyPressed(java.awt.event.KeyEvent evt) {//GEN-FIRST:event_
                 }
             }
 
-            kodebarang=null;
             kodebarang=new String[jml];
-            namabarang=null;
             namabarang=new String[jml];
-            satuan=null;
             satuan=new String[jml];
-            jumlah=null;
             jumlah=new String[jml];
-            jenis=null;
             jenis=new String[jml];
-            kategori=null;
             kategori=new String[jml];
-            golongan=null;
             golongan=new String[jml];
-            keterangan=null;
             keterangan=new String[jml];
+            
             index=0;        
             for(i=0;i<row;i++){
                 if(!tbDokter.getValueAt(i,0).toString().equals("")){
@@ -1008,6 +1010,15 @@ private void tbDokterKeyPressed(java.awt.event.KeyEvent evt) {//GEN-FIRST:event_
             for(i=0;i<jml;i++){
                 tabMode.addRow(new Object[]{jumlah[i],kodebarang[i],namabarang[i],satuan[i],jenis[i],kategori[i],golongan[i],keterangan[i]});
             }
+            
+            kodebarang=null;
+            namabarang=null;
+            satuan=null;
+            jumlah=null;
+            jenis=null;
+            kategori=null;
+            golongan=null;
+            keterangan=null;
             
             myObj = new FileReader("./cache/permintaanobat.iyem");
             root = mapper.readTree(myObj);
@@ -1060,5 +1071,21 @@ private void tbDokterKeyPressed(java.awt.event.KeyEvent evt) {//GEN-FIRST:event_
                 "PM"+Tanggal.getSelectedItem().toString().substring(6,10)+Tanggal.getSelectedItem().toString().substring(3,5)+Tanggal.getSelectedItem().toString().substring(0,2),3,NoPermintaan); 
     }
 
- 
+    private void runBackground(Runnable task) {
+        if (ceksukses) return;
+        ceksukses = true;
+
+        this.setCursor(Cursor.getPredefinedCursor(Cursor.WAIT_CURSOR));
+
+        executor.submit(() -> {
+            try {
+                task.run();
+            } finally {
+                ceksukses = false;
+                SwingUtilities.invokeLater(() -> {
+                    this.setCursor(Cursor.getDefaultCursor());
+                });
+            }
+        });
+    }
 }

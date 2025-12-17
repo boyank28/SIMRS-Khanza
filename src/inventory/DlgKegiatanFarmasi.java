@@ -25,8 +25,11 @@ import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
 import javax.swing.JOptionPane;
 import javax.swing.JTable;
+import javax.swing.SwingUtilities;
 import javax.swing.event.DocumentEvent;
 import javax.swing.table.DefaultTableModel;
 import javax.swing.table.TableColumn;
@@ -45,6 +48,8 @@ public final class DlgKegiatanFarmasi extends javax.swing.JDialog {
     private int i=0;
     private double itempengadaan=0,jmlitempengadaan=0,itemtersedia=0,jmlitemtersedia=0;   
     private String qrystok="",aktifkanbatch="no";
+    private final ExecutorService executor = Executors.newSingleThreadExecutor();
+    private volatile boolean ceksukses = false;
     /** Creates new form DlgLhtBiaya
      * @param parent
      * @param modal */
@@ -124,50 +129,59 @@ public final class DlgKegiatanFarmasi extends javax.swing.JDialog {
             TCari.getDocument().addDocumentListener(new javax.swing.event.DocumentListener(){
                 @Override
                 public void insertUpdate(DocumentEvent e) {
-                    if(TabRawat.getSelectedIndex()==0){
-                        if(TCari.getText().length()>2){
-                            tampil();
-                        }
-                    }else if(TabRawat.getSelectedIndex()==1){
-                        if(TCari.getText().length()>2){
-                            tampil2();
-                        }
-                    }else if(TabRawat.getSelectedIndex()==2){
-                        if(TCari.getText().length()>2){
-                            tampil3();
-                        }
+                    switch (TabRawat.getSelectedIndex()) {
+                        case 0:
+                            if(TCari.getText().length()>2){
+                                runBackground(() ->tampil());
+                            }   break;
+                        case 1:
+                            if(TCari.getText().length()>2){
+                                runBackground(() ->tampil2());
+                            }   break;
+                        case 2:
+                            if(TCari.getText().length()>2){
+                                runBackground(() ->tampil3());
+                            }   break;
+                        default:
+                            break;
                     }
                 }
                 @Override
                 public void removeUpdate(DocumentEvent e) {
-                    if(TabRawat.getSelectedIndex()==0){
-                        if(TCari.getText().length()>2){
-                            tampil();
-                        }
-                    }else if(TabRawat.getSelectedIndex()==1){
-                        if(TCari.getText().length()>2){
-                            tampil2();
-                        }
-                    }else if(TabRawat.getSelectedIndex()==2){
-                        if(TCari.getText().length()>2){
-                            tampil3();
-                        }
+                    switch (TabRawat.getSelectedIndex()) {
+                        case 0:
+                            if(TCari.getText().length()>2){
+                                runBackground(() ->tampil());
+                            }   break;
+                        case 1:
+                            if(TCari.getText().length()>2){
+                                runBackground(() ->tampil2());
+                            }   break;
+                        case 2:
+                            if(TCari.getText().length()>2){
+                                runBackground(() ->tampil3());
+                            }   break;
+                        default:
+                            break;
                     }
                 }
                 @Override
                 public void changedUpdate(DocumentEvent e) {
-                    if(TabRawat.getSelectedIndex()==0){
-                        if(TCari.getText().length()>2){
-                            tampil();
-                        }
-                    }else if(TabRawat.getSelectedIndex()==1){
-                        if(TCari.getText().length()>2){
-                            tampil2();
-                        }
-                    }else if(TabRawat.getSelectedIndex()==2){
-                        if(TCari.getText().length()>2){
-                            tampil3();
-                        }
+                    switch (TabRawat.getSelectedIndex()) {
+                        case 0:
+                            if(TCari.getText().length()>2){
+                                runBackground(() ->tampil());
+                            }   break;
+                        case 1:
+                            if(TCari.getText().length()>2){
+                                runBackground(() ->tampil2());
+                            }   break;
+                        case 2:
+                            if(TCari.getText().length()>2){
+                                runBackground(() ->tampil3());
+                            }   break;
+                        default:
+                            break;
                     }
                 }
             });
@@ -218,12 +232,12 @@ public final class DlgKegiatanFarmasi extends javax.swing.JDialog {
         setUndecorated(true);
         setResizable(false);
 
-        internalFrame1.setBorder(javax.swing.BorderFactory.createTitledBorder(javax.swing.BorderFactory.createLineBorder(new java.awt.Color(240, 245, 235)), "::[ Data Kegiatan Farmasi ]::", javax.swing.border.TitledBorder.DEFAULT_JUSTIFICATION, javax.swing.border.TitledBorder.DEFAULT_POSITION, new java.awt.Font("Tahoma", 0, 11), new java.awt.Color(50,50,50))); // NOI18N
+        internalFrame1.setBorder(javax.swing.BorderFactory.createTitledBorder(javax.swing.BorderFactory.createLineBorder(new java.awt.Color(240, 245, 235)), "::[ Data Kegiatan Farmasi ]::", javax.swing.border.TitledBorder.DEFAULT_JUSTIFICATION, javax.swing.border.TitledBorder.DEFAULT_POSITION, new java.awt.Font("Tahoma", 0, 11), new java.awt.Color(50, 50, 50))); // NOI18N
         internalFrame1.setName("internalFrame1"); // NOI18N
         internalFrame1.setLayout(new java.awt.BorderLayout(1, 1));
 
         TabRawat.setBackground(new java.awt.Color(255, 255, 253));
-        TabRawat.setForeground(new java.awt.Color(50,50,50));
+        TabRawat.setForeground(new java.awt.Color(50, 50, 50));
         TabRawat.setFont(new java.awt.Font("Tahoma", 0, 11)); // NOI18N
         TabRawat.setName("TabRawat"); // NOI18N
         TabRawat.addMouseListener(new java.awt.event.MouseAdapter() {
@@ -462,20 +476,24 @@ public final class DlgKegiatanFarmasi extends javax.swing.JDialog {
 }//GEN-LAST:event_BtnKeluarKeyPressed
 
 private void BtnCariActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_BtnCariActionPerformed
-        if(TabRawat.getSelectedIndex()==0){
-            tampil();
-        }else if(TabRawat.getSelectedIndex()==1){
-            tampil2();
-        }else if(TabRawat.getSelectedIndex()==2){
-            tampil3();
+        switch (TabRawat.getSelectedIndex()) {
+            case 0:
+                runBackground(() ->tampil());
+                break;
+            case 1:
+                runBackground(() ->tampil2());
+                break;
+            case 2:
+                runBackground(() ->tampil3());
+                break;
+            default:
+                break;
         }
 }//GEN-LAST:event_BtnCariActionPerformed
 
 private void BtnCariKeyPressed(java.awt.event.KeyEvent evt) {//GEN-FIRST:event_BtnCariKeyPressed
         if(evt.getKeyCode()==KeyEvent.VK_SPACE){
-            this.setCursor(Cursor.getPredefinedCursor(Cursor.WAIT_CURSOR)); 
-            tampil();
-            this.setCursor(Cursor.getDefaultCursor());
+            BtnCariActionPerformed(null);
         }else{
             Valid.pindah(evt, TKd, BtnPrint);
         }
@@ -492,31 +510,41 @@ private void BtnCariKeyPressed(java.awt.event.KeyEvent evt) {//GEN-FIRST:event_B
     }//GEN-LAST:event_TCariKeyPressed
 
     private void BtnAllActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_BtnAllActionPerformed
-            TCari.setText("");
-            if(TabRawat.getSelectedIndex()==0){
-                tampil();
-            }else if(TabRawat.getSelectedIndex()==1){
-                tampil2();
-            }else if(TabRawat.getSelectedIndex()==2){
-                tampil3();
-            }
+        TCari.setText("");
+        switch (TabRawat.getSelectedIndex()) {
+            case 0:
+                runBackground(() ->tampil());
+                break;
+            case 1:
+                runBackground(() ->tampil2());
+                break;
+            case 2:
+                runBackground(() ->tampil3());
+                break;
+            default:
+                break;
+        }
     }//GEN-LAST:event_BtnAllActionPerformed
 
     private void BtnAllKeyPressed(java.awt.event.KeyEvent evt) {//GEN-FIRST:event_BtnAllKeyPressed
         if(evt.getKeyCode()==KeyEvent.VK_SPACE){
             BtnAllActionPerformed(null);
-        }else{
-            
         }
     }//GEN-LAST:event_BtnAllKeyPressed
 
     private void TabRawatMouseClicked(java.awt.event.MouseEvent evt) {//GEN-FIRST:event_TabRawatMouseClicked
-        if(TabRawat.getSelectedIndex()==0){
-            tampil();
-        }else if(TabRawat.getSelectedIndex()==1){
-            tampil2();
-        }else if(TabRawat.getSelectedIndex()==2){
-            tampil3();
+        switch (TabRawat.getSelectedIndex()) {
+            case 0:
+                runBackground(() ->tampil());
+                break;
+            case 1:
+                runBackground(() ->tampil2());
+                break;
+            case 2:
+                runBackground(() ->tampil3());
+                break;
+            default:
+                break;
         }
     }//GEN-LAST:event_TabRawatMouseClicked
 
@@ -623,7 +651,7 @@ private void BtnCariKeyPressed(java.awt.event.KeyEvent evt) {//GEN-FIRST:event_B
                         }
                     }
                     
-                    tabMode.addRow(new String[]{
+                    tabMode.addRow(new Object[]{
                         i+"",rs.getString("nama"),itempengadaan+"",itemtersedia+""
                     });
                     i++;
@@ -638,7 +666,7 @@ private void BtnCariKeyPressed(java.awt.event.KeyEvent evt) {//GEN-FIRST:event_B
                     ps.close();
                 }
             }    
-            tabMode.addRow(new String[]{
+            tabMode.addRow(new Object[]{
                 "","Total : ",jmlitempengadaan+"",jmlitemtersedia+""
             });
             this.setCursor(Cursor.getDefaultCursor());
@@ -709,7 +737,7 @@ private void BtnCariKeyPressed(java.awt.event.KeyEvent evt) {//GEN-FIRST:event_B
                         }
                     }
                     
-                    tabMode2.addRow(new String[]{
+                    tabMode2.addRow(new Object[]{
                         i+"",rs.getString("nama"),itempengadaan+"",itemtersedia+""
                     });
                     i++;
@@ -724,7 +752,7 @@ private void BtnCariKeyPressed(java.awt.event.KeyEvent evt) {//GEN-FIRST:event_B
                     ps.close();
                 }
             }    
-            tabMode2.addRow(new String[]{
+            tabMode2.addRow(new Object[]{
                 "","Total : ",jmlitempengadaan+"",jmlitemtersedia+""
             });
             this.setCursor(Cursor.getDefaultCursor());
@@ -796,7 +824,7 @@ private void BtnCariKeyPressed(java.awt.event.KeyEvent evt) {//GEN-FIRST:event_B
                         }
                     }
                     
-                    tabMode3.addRow(new String[]{
+                    tabMode3.addRow(new Object[]{
                         i+"",rs.getString("nama"),itempengadaan+"",itemtersedia+""
                     });
                     i++;
@@ -811,7 +839,7 @@ private void BtnCariKeyPressed(java.awt.event.KeyEvent evt) {//GEN-FIRST:event_B
                     ps.close();
                 }
             }    
-            tabMode3.addRow(new String[]{
+            tabMode3.addRow(new Object[]{
                 "","Total : ",jmlitempengadaan+"",jmlitemtersedia+""
             });
             this.setCursor(Cursor.getDefaultCursor());
@@ -820,5 +848,21 @@ private void BtnCariKeyPressed(java.awt.event.KeyEvent evt) {//GEN-FIRST:event_B
         }
     }
     
-    
+    private void runBackground(Runnable task) {
+        if (ceksukses) return;
+        ceksukses = true;
+
+        this.setCursor(Cursor.getPredefinedCursor(Cursor.WAIT_CURSOR));
+
+        executor.submit(() -> {
+            try {
+                task.run();
+            } finally {
+                ceksukses = false;
+                SwingUtilities.invokeLater(() -> {
+                    this.setCursor(Cursor.getDefaultCursor());
+                });
+            }
+        });
+    }
 }

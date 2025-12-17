@@ -28,6 +28,8 @@ import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
 import javafx.application.Platform;
 import javafx.beans.value.ChangeListener;
 import javafx.beans.value.ObservableValue;
@@ -58,6 +60,8 @@ public final class DlgPerkiraanBiayaRanap extends javax.swing.JDialog {
     private validasi Valid=new validasi();
     private PreparedStatement ps,ps2,pspenyakit;
     private ResultSet rs,rs2;
+    private final ExecutorService executor = Executors.newSingleThreadExecutor();
+    private volatile boolean ceksukses = false;
     private DlgCariBangsal bangsal=new DlgCariBangsal(null,false);
     private double all=0,Laborat=0,Radiologi=0,Operasi=0,Obat=0,Ranap_Dokter=0,Ranap_Paramedis=0,Ranap_Dokter_Paramedis=0,Ralan_Dokter=0,
              Ralan_Paramedis=0,Ralan_Dokter_Paramedis=0,Tambahan=0,Potongan=0,Kamar=0,Registrasi=0,Harian=0,Retur_Obat=0,Resep_Pulang=0,
@@ -216,19 +220,19 @@ public final class DlgPerkiraanBiayaRanap extends javax.swing.JDialog {
                 @Override
                 public void insertUpdate(DocumentEvent e) {
                     if(TCari.getText().length()>2){
-                        tampil();
+                        runBackground(() ->tampil());
                     }
                 }
                 @Override
                 public void removeUpdate(DocumentEvent e) {
                     if(TCari.getText().length()>2){
-                        tampil();
+                        runBackground(() ->tampil());
                     }
                 }
                 @Override
                 public void changedUpdate(DocumentEvent e) {
                     if(TCari.getText().length()>2){
-                        tampil();
+                        runBackground(() ->tampil());
                     }
                 }
             });
@@ -404,7 +408,6 @@ public final class DlgPerkiraanBiayaRanap extends javax.swing.JDialog {
 
         Scroll3.setBorder(javax.swing.BorderFactory.createTitledBorder(javax.swing.BorderFactory.createLineBorder(new java.awt.Color(239, 244, 234)), "Berdasar Data Tarif Rumah Sakit 2 Tahun Terakhir", javax.swing.border.TitledBorder.DEFAULT_JUSTIFICATION, javax.swing.border.TitledBorder.DEFAULT_POSITION, new java.awt.Font("Tahoma", 0, 11))); // NOI18N
         Scroll3.setName("Scroll3"); // NOI18N
-        Scroll3.setOpaque(true);
         Scroll3.setPreferredSize(new java.awt.Dimension(452, 100));
 
         tbNilaiRS.setComponentPopupMenu(jPopupMenu1);
@@ -415,7 +418,6 @@ public final class DlgPerkiraanBiayaRanap extends javax.swing.JDialog {
 
         Scroll4.setBorder(javax.swing.BorderFactory.createTitledBorder(javax.swing.BorderFactory.createLineBorder(new java.awt.Color(239, 244, 234)), "Berdasar Data Nilai Balik INACBG 2 Tahun Terakhir", javax.swing.border.TitledBorder.DEFAULT_JUSTIFICATION, javax.swing.border.TitledBorder.DEFAULT_POSITION, new java.awt.Font("Tahoma", 0, 11))); // NOI18N
         Scroll4.setName("Scroll4"); // NOI18N
-        Scroll4.setOpaque(true);
         Scroll4.setPreferredSize(new java.awt.Dimension(452, 100));
 
         tbNilaiINACBG.setComponentPopupMenu(jPopupMenu2);
@@ -689,15 +691,12 @@ public final class DlgPerkiraanBiayaRanap extends javax.swing.JDialog {
 }//GEN-LAST:event_BtnKeluarKeyPressed
 
 private void BtnCari1ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_BtnCari1ActionPerformed
-        
-        tampil();
+        runBackground(() ->tampil());
 }//GEN-LAST:event_BtnCari1ActionPerformed
 
 private void BtnCari1KeyPressed(java.awt.event.KeyEvent evt) {//GEN-FIRST:event_BtnCari1KeyPressed
         if(evt.getKeyCode()==KeyEvent.VK_SPACE){
-            this.setCursor(Cursor.getPredefinedCursor(Cursor.WAIT_CURSOR)); 
-            tampil();
-            this.setCursor(Cursor.getDefaultCursor());
+            runBackground(() ->tampil());
         }else{
             Valid.pindah(evt, TCari, BtnPrint);
         }
@@ -718,7 +717,7 @@ private void BtnCari1KeyPressed(java.awt.event.KeyEvent evt) {//GEN-FIRST:event_
     private void BtnAllActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_BtnAllActionPerformed
         TCari.setText("");
         NmBangsal.setText("");
-        tampil();
+        runBackground(() ->tampil());
     }//GEN-LAST:event_BtnAllActionPerformed
 
     private void BtnAllKeyPressed(java.awt.event.KeyEvent evt) {//GEN-FIRST:event_BtnAllKeyPressed
@@ -731,7 +730,7 @@ private void BtnCari1KeyPressed(java.awt.event.KeyEvent evt) {//GEN-FIRST:event_
 
     private void TCariKeyPressed(java.awt.event.KeyEvent evt) {//GEN-FIRST:event_TCariKeyPressed
         if(evt.getKeyCode()==KeyEvent.VK_ENTER){
-            tampil();
+            runBackground(() ->tampil());
         }else if(evt.getKeyCode()==KeyEvent.VK_PAGE_DOWN){
             BtnCari1.requestFocus();
         }else if(evt.getKeyCode()==KeyEvent.VK_PAGE_UP){
@@ -745,7 +744,7 @@ private void BtnCari1KeyPressed(java.awt.event.KeyEvent evt) {//GEN-FIRST:event_
 
     private void DiagnosaKeyPressed(java.awt.event.KeyEvent evt) {//GEN-FIRST:event_DiagnosaKeyPressed
         if(evt.getKeyCode()==KeyEvent.VK_ENTER){
-            tampildiagnosa();   
+            runBackground(() ->tampildiagnosa());   
             Valid.tabelKosong(tabModeNilaiRS);
             Valid.tabelKosong(tabModeNilaiINACBG);
         }else if(evt.getKeyCode()==KeyEvent.VK_UP){
@@ -754,7 +753,7 @@ private void BtnCari1KeyPressed(java.awt.event.KeyEvent evt) {//GEN-FIRST:event_
     }//GEN-LAST:event_DiagnosaKeyPressed
 
     private void BtnCariPenyakitActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_BtnCariPenyakitActionPerformed
-        tampildiagnosa();
+        runBackground(() ->tampildiagnosa());  
         Valid.tabelKosong(tabModeNilaiRS);
         Valid.tabelKosong(tabModeNilaiINACBG);
     }//GEN-LAST:event_BtnCariPenyakitActionPerformed
@@ -1023,7 +1022,7 @@ private void BtnCari1KeyPressed(java.awt.event.KeyEvent evt) {//GEN-FIRST:event_
                 if(tbNilaiRS.getSelectedRow()!= -1){
                     Sequel.meghapus("perkiraan_biaya_ranap","no_rawat",tbBangsal.getValueAt(tbBangsal.getSelectedRow(),0).toString());
                     if(Sequel.menyimpantf2("perkiraan_biaya_ranap","?,?,?","data",3,new String[]{tbBangsal.getValueAt(tbBangsal.getSelectedRow(),0).toString(),tbDiagnosa.getValueAt(tbDiagnosa.getSelectedRow(),0).toString(),tbNilaiRS.getValueAt(tbNilaiRS.getSelectedRow(),2).toString()})==true){
-                        tampil();
+                        runBackground(() ->tampil());
                     }else{
                         JOptionPane.showMessageDialog(null,"Silahkan Anda pilih dulu pasien yang mau dimasukkan perkiraannya ...!!");
                     }
@@ -1044,7 +1043,7 @@ private void BtnCari1KeyPressed(java.awt.event.KeyEvent evt) {//GEN-FIRST:event_
                 if(tbNilaiINACBG.getSelectedRow()!= -1){
                     Sequel.meghapus("perkiraan_biaya_ranap","no_rawat",tbBangsal.getValueAt(tbBangsal.getSelectedRow(),0).toString());
                     if(Sequel.menyimpantf2("perkiraan_biaya_ranap","?,?,?","data",3,new String[]{tbBangsal.getValueAt(tbBangsal.getSelectedRow(),0).toString(),tbDiagnosa.getValueAt(tbDiagnosa.getSelectedRow(),0).toString(),tbNilaiINACBG.getValueAt(tbNilaiINACBG.getSelectedRow(),2).toString()})==true){
-                        tampil();
+                        runBackground(() ->tampil());
                     }else{
                         JOptionPane.showMessageDialog(null,"Silahkan Anda pilih dulu pasien yang mau dimasukkan perkiraannya ...!!");
                     }
@@ -1062,6 +1061,7 @@ private void BtnCari1KeyPressed(java.awt.event.KeyEvent evt) {//GEN-FIRST:event_
     private void MnJadikanPerkiraan2ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_MnJadikanPerkiraan2ActionPerformed
         if(tbBangsal.getSelectedRow()!= -1){
             if(tbDiagnosa.getSelectedRow()!= -1){
+                System.out.println("http://"+koneksiDB.HOSTHYBRIDWEB()+":"+koneksiDB.PORTWEB()+"/"+koneksiDB.HYBRIDWEB()+"/"+"inacbg/pages/perkiraantarif.php?usere="+koneksiDB.USERHYBRIDWEB()+"&passwordte="+koneksiDB.PASHYBRIDWEB()+"&norawat="+tbBangsal.getValueAt(tbBangsal.getSelectedRow(),0).toString()+"&penyakit="+tbDiagnosa.getValueAt(tbDiagnosa.getSelectedRow(),0).toString());
                 loadURL("http://"+koneksiDB.HOSTHYBRIDWEB()+":"+koneksiDB.PORTWEB()+"/"+koneksiDB.HYBRIDWEB()+"/"+"inacbg/pages/perkiraantarif.php?usere="+koneksiDB.USERHYBRIDWEB()+"&passwordte="+koneksiDB.PASHYBRIDWEB()+"&norawat="+tbBangsal.getValueAt(tbBangsal.getSelectedRow(),0).toString()+"&penyakit="+tbDiagnosa.getValueAt(tbDiagnosa.getSelectedRow(),0).toString());
             }else{
                 JOptionPane.showMessageDialog(null,"Silahkan Anda pilih dulu diagnosa pasien yang mau dimasukkan perkiraannya ...!!");
@@ -1503,5 +1503,22 @@ private void BtnCari1KeyPressed(java.awt.event.KeyEvent evt) {//GEN-FIRST:event_
             }
         });
     }
+    
+    private void runBackground(Runnable task) {
+        if (ceksukses) return;
+        ceksukses = true;
 
+        this.setCursor(Cursor.getPredefinedCursor(Cursor.WAIT_CURSOR));
+
+        executor.submit(() -> {
+            try {
+                task.run();
+            } finally {
+                ceksukses = false;
+                SwingUtilities.invokeLater(() -> {
+                    this.setCursor(Cursor.getDefaultCursor());
+                });
+            }
+        });
+    }
 }

@@ -24,10 +24,13 @@ import java.sql.ResultSet;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
 import javax.net.ssl.SSLContext;
 import javax.net.ssl.X509TrustManager;
 import javax.swing.JOptionPane;
 import javax.swing.JTable;
+import javax.swing.SwingUtilities;
 import javax.swing.event.DocumentEvent;
 import javax.swing.table.DefaultTableModel;
 import javax.swing.table.TableColumn;
@@ -55,8 +58,6 @@ public class BPJSSuratKontrol extends javax.swing.JDialog {
     private PreparedStatement ps;
     private ResultSet rs;
     private int i=0;
-    private BPJSCekReferensiDokterKontrol dokter=new BPJSCekReferensiDokterKontrol(null,false);
-    private BPJSCekReferensiSpesialistikKontrol poli=new BPJSCekReferensiSpesialistikKontrol(null,false);
     private HttpHeaders headers;
     private HttpEntity requestEntity;
     private ObjectMapper mapper = new ObjectMapper();
@@ -66,6 +67,8 @@ public class BPJSSuratKontrol extends javax.swing.JDialog {
     private String link="",requestJson="",URL="",user="",URUTNOREG="",utc="",JADIKANBOOKINGSURATKONTROLAPIBPJS="no",kodedokter="",kodepoli="",noreg="";
     private ApiBPJS api=new ApiBPJS();
     private boolean status=false;
+    private final ExecutorService executor = Executors.newSingleThreadExecutor();
+    private volatile boolean ceksukses = false;
 
     /** Creates new form DlgPemberianInfus
      * @param parent
@@ -131,19 +134,19 @@ public class BPJSSuratKontrol extends javax.swing.JDialog {
                 @Override
                 public void insertUpdate(DocumentEvent e) {
                     if(TCari.getText().length()>2){
-                        tampil();
+                        runBackground(() ->tampil());
                     }
                 }
                 @Override
                 public void removeUpdate(DocumentEvent e) {
                     if(TCari.getText().length()>2){
-                        tampil();
+                        runBackground(() ->tampil());
                     }
                 }
                 @Override
                 public void changedUpdate(DocumentEvent e) {
                     if(TCari.getText().length()>2){
-                        tampil();
+                        runBackground(() ->tampil());
                     }
                 }
             });
@@ -151,76 +154,6 @@ public class BPJSSuratKontrol extends javax.swing.JDialog {
         
         ChkInput.setSelected(false);
         isForm();
-        
-        dokter.addWindowListener(new WindowListener() {
-            @Override
-            public void windowOpened(WindowEvent e) {;}
-            @Override
-            public void windowClosing(WindowEvent e) {}
-            @Override
-            public void windowClosed(WindowEvent e) {
-                if(dokter.getTable().getSelectedRow()!= -1){                    
-                    KdDokter.setText(dokter.getTable().getValueAt(dokter.getTable().getSelectedRow(),1).toString());
-                    NmDokter.setText(dokter.getTable().getValueAt(dokter.getTable().getSelectedRow(),2).toString());
-                }
-            }
-            @Override
-            public void windowIconified(WindowEvent e) {}
-            @Override
-            public void windowDeiconified(WindowEvent e) {}
-            @Override
-            public void windowActivated(WindowEvent e) {}
-            @Override
-            public void windowDeactivated(WindowEvent e) {}
-        });
-        
-        dokter.getTable().addKeyListener(new KeyListener() {
-            @Override
-            public void keyTyped(KeyEvent e) {}
-            @Override
-            public void keyPressed(KeyEvent e) {
-                if(e.getKeyCode()==KeyEvent.VK_SPACE){
-                    dokter.dispose();
-                }
-            }
-            @Override
-            public void keyReleased(KeyEvent e) {}
-        });  
-        
-        poli.addWindowListener(new WindowListener() {
-            @Override
-            public void windowOpened(WindowEvent e) {}
-            @Override
-            public void windowClosing(WindowEvent e) {}
-            @Override
-            public void windowClosed(WindowEvent e) {
-                if(poli.getTable().getSelectedRow()!= -1){                    
-                    KdPoli.setText(poli.getTable().getValueAt(poli.getTable().getSelectedRow(),1).toString());
-                    NmPoli.setText(poli.getTable().getValueAt(poli.getTable().getSelectedRow(),2).toString());
-                }   
-            }
-            @Override
-            public void windowIconified(WindowEvent e) {}
-            @Override
-            public void windowDeiconified(WindowEvent e) {}
-            @Override
-            public void windowActivated(WindowEvent e) {}
-            @Override
-            public void windowDeactivated(WindowEvent e) {}
-        });
-        
-        poli.getTable().addKeyListener(new KeyListener() {
-            @Override
-            public void keyTyped(KeyEvent e) {}
-            @Override
-            public void keyPressed(KeyEvent e) {
-                if(e.getKeyCode()==KeyEvent.VK_SPACE){
-                    poli.dispose();
-                }
-            }
-            @Override
-            public void keyReleased(KeyEvent e) {}
-        });  
         
         try {
             user=akses.getkode().replace(" ","").substring(0,9);
@@ -933,7 +866,7 @@ public class BPJSSuratKontrol extends javax.swing.JDialog {
                             NoSEP.getText(),Valid.SetTgl(TanggalSurat.getSelectedItem()+""),response.asText(),Valid.SetTgl(TanggalKontrol.getSelectedItem()+""),KdDokter.getText(),NmDokter.getText(),KdPoli.getText(),NmPoli.getText()
                         })==true){
                         emptTeks();
-                        tampil();
+                        runBackground(() ->tampil());
                         if(JADIKANBOOKINGSURATKONTROLAPIBPJS.equals("yes")){
                             if(isBooking()==false){
                                 JOptionPane.showMessageDialog(null,"Gagal menyimpan booking, silahkan hubungi administrator...!!!!");
@@ -1071,7 +1004,7 @@ public class BPJSSuratKontrol extends javax.swing.JDialog {
 }//GEN-LAST:event_TCariKeyPressed
 
     private void BtnCariActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_BtnCariActionPerformed
-        tampil();
+        runBackground(() ->tampil());
 }//GEN-LAST:event_BtnCariActionPerformed
 
     private void BtnCariKeyPressed(java.awt.event.KeyEvent evt) {//GEN-FIRST:event_BtnCariKeyPressed
@@ -1084,13 +1017,13 @@ public class BPJSSuratKontrol extends javax.swing.JDialog {
 
     private void BtnAllActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_BtnAllActionPerformed
         TCari.setText("");
-        tampil();
+        runBackground(() ->tampil());
 }//GEN-LAST:event_BtnAllActionPerformed
 
     private void BtnAllKeyPressed(java.awt.event.KeyEvent evt) {//GEN-FIRST:event_BtnAllKeyPressed
         if(evt.getKeyCode()==KeyEvent.VK_SPACE){
-            tampil();
             TCari.setText("");
+            runBackground(() ->tampil());
         }else{
             Valid.pindah(evt, BtnCari, NoSEP);
         }
@@ -1109,6 +1042,41 @@ private void BtnDokterActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIR
     if(KdPoli.getText().equals("")||NmPoli.getText().equals("")){
         Valid.textKosong(BtnPoli,"Unit/Poli");
     }else{
+        BPJSCekReferensiDokterKontrol dokter=new BPJSCekReferensiDokterKontrol(null,false);
+        dokter.addWindowListener(new WindowListener() {
+            @Override
+            public void windowOpened(WindowEvent e) {;}
+            @Override
+            public void windowClosing(WindowEvent e) {}
+            @Override
+            public void windowClosed(WindowEvent e) {
+                if(dokter.getTable().getSelectedRow()!= -1){                    
+                    KdDokter.setText(dokter.getTable().getValueAt(dokter.getTable().getSelectedRow(),1).toString());
+                    NmDokter.setText(dokter.getTable().getValueAt(dokter.getTable().getSelectedRow(),2).toString());
+                }
+            }
+            @Override
+            public void windowIconified(WindowEvent e) {}
+            @Override
+            public void windowDeiconified(WindowEvent e) {}
+            @Override
+            public void windowActivated(WindowEvent e) {}
+            @Override
+            public void windowDeactivated(WindowEvent e) {}
+        });
+        
+        dokter.getTable().addKeyListener(new KeyListener() {
+            @Override
+            public void keyTyped(KeyEvent e) {}
+            @Override
+            public void keyPressed(KeyEvent e) {
+                if(e.getKeyCode()==KeyEvent.VK_SPACE){
+                    dokter.dispose();
+                }
+            }
+            @Override
+            public void keyReleased(KeyEvent e) {}
+        }); 
         dokter.SetKontrol(KdPoli.getText(),"2: Rencana Kontrol",Valid.SetTgl(TanggalKontrol.getSelectedItem()+""));
         dokter.setSize(internalFrame1.getWidth()-20,internalFrame1.getHeight()-20);
         dokter.setLocationRelativeTo(internalFrame1);
@@ -1176,7 +1144,7 @@ private void ChkInputActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRS
                                 Valid.SetTgl(TanggalSurat.getSelectedItem()+""),Valid.SetTgl(TanggalKontrol.getSelectedItem()+""),KdDokter.getText(),NmDokter.getText(),KdPoli.getText(),NmPoli.getText(),NoSurat.getText()
                             })==true){
                             emptTeks();
-                            tampil();
+                            runBackground(() ->tampil());
                         }
                     }else{
                         JOptionPane.showMessageDialog(null,nameNode.path("message").asText());
@@ -1226,6 +1194,41 @@ private void ChkInputActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRS
     }//GEN-LAST:event_BtnPoliKeyPressed
 
     private void BtnPoliActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_BtnPoliActionPerformed
+        BPJSCekReferensiSpesialistikKontrol poli=new BPJSCekReferensiSpesialistikKontrol(null,false);
+        poli.addWindowListener(new WindowListener() {
+            @Override
+            public void windowOpened(WindowEvent e) {}
+            @Override
+            public void windowClosing(WindowEvent e) {}
+            @Override
+            public void windowClosed(WindowEvent e) {
+                if(poli.getTable().getSelectedRow()!= -1){                    
+                    KdPoli.setText(poli.getTable().getValueAt(poli.getTable().getSelectedRow(),1).toString());
+                    NmPoli.setText(poli.getTable().getValueAt(poli.getTable().getSelectedRow(),2).toString());
+                }   
+            }
+            @Override
+            public void windowIconified(WindowEvent e) {}
+            @Override
+            public void windowDeiconified(WindowEvent e) {}
+            @Override
+            public void windowActivated(WindowEvent e) {}
+            @Override
+            public void windowDeactivated(WindowEvent e) {}
+        });
+        
+        poli.getTable().addKeyListener(new KeyListener() {
+            @Override
+            public void keyTyped(KeyEvent e) {}
+            @Override
+            public void keyPressed(KeyEvent e) {
+                if(e.getKeyCode()==KeyEvent.VK_SPACE){
+                    poli.dispose();
+                }
+            }
+            @Override
+            public void keyReleased(KeyEvent e) {}
+        }); 
         poli.SetKontrol(NoSEP.getText(),"2: Rencana Kontrol",Valid.SetTgl(TanggalKontrol.getSelectedItem()+""));
         poli.setSize(internalFrame1.getWidth()-20,internalFrame1.getHeight()-20);
         poli.setLocationRelativeTo(internalFrame1);
@@ -1393,7 +1396,7 @@ private void ChkInputActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRS
                     while(rs.next()){
                         tabMode.addRow(new Object[]{
                             rs.getString("no_rawat"),rs.getString("no_sep"),rs.getString("no_kartu"),rs.getString("nomr"),rs.getString("nama_pasien"),
-                            rs.getString("tanggal_lahir"),rs.getString("jkel"),rs.getString("nmdiagnosaawal"),rs.getString("tgl_surat"),rs.getString("no_surat"),
+                            rs.getString("tanggal_lahir"),rs.getString("jkel"),rs.getString("diagawal")+" "+rs.getString("nmdiagnosaawal"),rs.getString("tgl_surat"),rs.getString("no_surat"),
                             rs.getString("tgl_rencana"),rs.getString("kd_dokter_bpjs"),rs.getString("nm_dokter_bpjs"),rs.getString("kd_poli_bpjs"),rs.getString("nm_poli_bpjs")
                         });                    
                     }
@@ -1436,7 +1439,7 @@ private void ChkInputActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRS
                     while(rs.next()){
                         tabMode.addRow(new Object[]{
                             rs.getString("no_rawat"),rs.getString("no_sep"),rs.getString("no_kartu"),rs.getString("nomr"),rs.getString("nama_pasien"),
-                            rs.getString("tanggal_lahir"),rs.getString("jkel"),rs.getString("nmdiagnosaawal"),rs.getString("tgl_surat"),rs.getString("no_surat"),
+                            rs.getString("tanggal_lahir"),rs.getString("jkel"),rs.getString("diagawal")+" "+rs.getString("nmdiagnosaawal"),rs.getString("tgl_surat"),rs.getString("no_surat"),
                             rs.getString("tgl_rencana"),rs.getString("kd_dokter_bpjs"),rs.getString("nm_dokter_bpjs"),rs.getString("kd_poli_bpjs"),rs.getString("nm_poli_bpjs")
                         });                    
                     }
@@ -1509,14 +1512,14 @@ private void ChkInputActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRS
         TCari.setText(nosep);
         ChkInput.setSelected(true);
         isForm();
-        tampil();
+        runBackground(() ->tampil());
     }
     
     public void setNoRm(String norm) {
         TCari.setText(norm);
         ChkInput.setSelected(false);
         isForm();
-        tampil();
+        runBackground(() ->tampil());
     }
     
     private void isForm(){
@@ -1649,5 +1652,23 @@ private void ChkInputActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRS
         }
             
         return status;
+    }
+    
+    private void runBackground(Runnable task) {
+        if (ceksukses) return;
+        ceksukses = true;
+
+        this.setCursor(Cursor.getPredefinedCursor(Cursor.WAIT_CURSOR));
+
+        executor.submit(() -> {
+            try {
+                task.run();
+            } finally {
+                ceksukses = false;
+                SwingUtilities.invokeLater(() -> {
+                    this.setCursor(Cursor.getDefaultCursor());
+                });
+            }
+        });
     }
 }

@@ -276,7 +276,7 @@
         <aside id="leftsidebar" class="sidebar">
             <div class="user-info">
                 <div class="image">
-                    <img src="<?='data: '.@mime_content_type($_SESSION["photo"]).';base64,'.base64_encode(file_get_contents($_SESSION["photo"]));?>" width="55" height="48" alt="Photo" />&nbsp;&nbsp;&nbsp;&nbsp;<b><font color="#DDFF55">No.RM : <?=encrypt_decrypt($_SESSION["ses_pasien"],"d");?></font></b>
+                    <img src="<?='data: image/jpeg;base64,'.base64_encode(file_get_contents($_SESSION["photo"]));?>" width="55" height="48" alt="Photo" />&nbsp;&nbsp;&nbsp;&nbsp;<b><font color="#DDFF55">No.RM : <?=encrypt_decrypt($_SESSION["ses_pasien"],"d");?></font></b>
                 </div>
                 <div class="info-container">
                     <div class="name" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false"><?=$_SESSION["nm_pasien"];?></div>
@@ -350,6 +350,15 @@
                             </li>
                             <li <?=$subhalaman=="AntrianEKG"?"class='active'":""?>>
                                 <a href="index.php?act=AntrianEKG&hal=AntrianTindakan">EKG</a>
+                            </li>
+                            <li <?=$subhalaman=="AntrianEcho"?"class='active'":""?>>
+                                <a href="index.php?act=AntrianEcho&hal=AntrianTindakan">Echocardiografi</a>
+                            </li>
+                            <li <?=$subhalaman=="AntrianSlitLamp"?"class='active'":""?>>
+                                <a href="index.php?act=AntrianSlitLamp&hal=AntrianTindakan">Slit Lamp</a>
+                            </li>
+                            <li <?=$subhalaman=="AntrianOCT"?"class='active'":""?>>
+                                <a href="index.php?act=AntrianOCT&hal=AntrianTindakan">OCT</a>
                             </li>
                             <li <?=$subhalaman=="AntrianEndoskopiFaring"?"class='active'":""?>>
                                 <a href="index.php?act=AntrianEndoskopiFaring&hal=AntrianTindakan">Endoskopi Faring/Laringoskopi</a>
@@ -426,6 +435,21 @@
                             </li>
                             <li <?=$subhalaman=="PersetujuanRestrain"?"class='active'":""?>>
                                 <a href="index.php?act=PersetujuanRestrain&hal=Persetujuan">Persetujuan Restrain</a>
+                            </li>
+                            <li <?=$subhalaman=="PersetujuanPemeriksaanHIV"?"class='active'":""?>>
+                                <a href="index.php?act=PersetujuanPemeriksaanHIV&hal=Persetujuan">Persetujuan Pemeriksaan HIV</a>
+                            </li>
+                            <li <?=$subhalaman=="BuktiPelaksanaanEdukasi"?"class='active'":""?>>
+                                <a href="index.php?act=BuktiPelaksanaanEdukasi&hal=Persetujuan">Pelaksanaan Informasi/Edukasi</a>
+                            </li>
+                            <li <?=$subhalaman=="BuktiPelayananRehabilitasi"?"class='active'":""?>>
+                                <a href="index.php?act=BuktiPelayananRehabilitasi&hal=Persetujuan">Layanan Kedokteran Fisik</a>
+                            </li>
+                            <li <?=$subhalaman=="BuktiPelayananProgramKFR"?"class='active'":""?>>
+                                <a href="index.php?act=BuktiPelayananProgramKFR&hal=Persetujuan">Layanan Program KFR</a>
+                            </li>
+                            <li <?=$subhalaman=="PernyataanMemilihDPJP"?"class='active'":""?>>
+                                <a href="index.php?act=PernyataanMemilihDPJP&hal=Persetujuan">Pernyataan Memilih DPJP</a>
                             </li>
                         </ul>
                     </li>

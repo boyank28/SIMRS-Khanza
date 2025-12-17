@@ -52,6 +52,8 @@ import kepegawaian.DlgCariDokter;
 import simrskhanza.DlgCariBangsal;
 import simrskhanza.DlgCariPoli;
 import simrskhanza.DlgPeriksaLaboratorium;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
 
 public class DlgCariPermintaanLab extends javax.swing.JDialog {
     private final DefaultTableModel tabMode,tabMode2,tabMode3,tabMode4;
@@ -66,12 +68,11 @@ public class DlgCariPermintaanLab extends javax.swing.JDialog {
     private int i,nilai_detik,permintaanbaru=0;
     private PreparedStatement ps,ps2,ps3;
     private ResultSet rs,rs2,rs3;
-    private DlgCariDokter dokter=new DlgCariDokter(null,false);
-    private DlgCariPoli poli=new DlgCariPoli(null,false);
-    private DlgCariBangsal ruang=new DlgCariBangsal(null,false);
     private BackgroundMusic music;
     private Date now;
     private boolean aktif=false,semua;
+    private final ExecutorService executor = Executors.newSingleThreadExecutor();
+    private volatile boolean ceksukses = false;
     private ApiLICA lica=new ApiLICA();
     private ApiSOFTMEDIX softmedix=new ApiSOFTMEDIX();
     private ObjectMapper mapper = new ObjectMapper();
@@ -319,94 +320,23 @@ public class DlgCariPermintaanLab extends javax.swing.JDialog {
                 @Override
                 public void insertUpdate(DocumentEvent e) {
                     if(TCari.getText().length()>2){
-                        tampil();
+                        pilihTab();
                     }
                 }
                 @Override
                 public void removeUpdate(DocumentEvent e) {
                     if(TCari.getText().length()>2){
-                        tampil();
+                        pilihTab();
                     }
                 }
                 @Override
                 public void changedUpdate(DocumentEvent e) {
                     if(TCari.getText().length()>2){
-                        tampil();
+                        pilihTab();
                     }
                 }
             });
         } 
-        
-        dokter.addWindowListener(new WindowListener() {
-            @Override
-            public void windowOpened(WindowEvent e) {;}
-            @Override
-            public void windowClosing(WindowEvent e) {}
-            @Override
-            public void windowClosed(WindowEvent e) {
-                if(dokter.getTable().getSelectedRow()!= -1){ 
-                    if(TabPilihRawat.getSelectedIndex()==0){
-                        CrDokter.setText(dokter.getTable().getValueAt(dokter.getTable().getSelectedRow(),1).toString());
-                        CrDokter.requestFocus();
-                    }else if(TabPilihRawat.getSelectedIndex()==1){
-                        CrDokter2.setText(dokter.getTable().getValueAt(dokter.getTable().getSelectedRow(),1).toString());
-                        CrDokter2.requestFocus();
-                    }                        
-                }                
-            }
-            @Override
-            public void windowIconified(WindowEvent e) {}
-            @Override
-            public void windowDeiconified(WindowEvent e) {}
-            @Override
-            public void windowActivated(WindowEvent e) {}
-            @Override
-            public void windowDeactivated(WindowEvent e) {}
-        });
-        
-        poli.addWindowListener(new WindowListener() {
-            @Override
-            public void windowOpened(WindowEvent e) {}
-            @Override
-            public void windowClosing(WindowEvent e) {}
-            @Override
-            public void windowClosed(WindowEvent e) {
-                if(poli.getTable().getSelectedRow()!= -1){   
-                    CrPoli.setText(poli.getTable().getValueAt(poli.getTable().getSelectedRow(),1).toString());
-                    CrPoli.requestFocus();
-                }   
-            }
-            @Override
-            public void windowIconified(WindowEvent e) {}
-            @Override
-            public void windowDeiconified(WindowEvent e) {}
-            @Override
-            public void windowActivated(WindowEvent e) {}
-            @Override
-            public void windowDeactivated(WindowEvent e) {}
-        }); 
-        
-        ruang.addWindowListener(new WindowListener() {
-            @Override
-            public void windowOpened(WindowEvent e) {}
-            @Override
-            public void windowClosing(WindowEvent e) {}
-            @Override
-            public void windowClosed(WindowEvent e) {
-                if(ruang.getTable().getSelectedRow()!= -1){   
-                    Kamar.setText(ruang.getTable().getValueAt(ruang.getTable().getSelectedRow(),1).toString());  
-                    Kamar.requestFocus();
-                }                      
-            }
-            @Override
-            public void windowIconified(WindowEvent e) {}
-            @Override
-            public void windowDeiconified(WindowEvent e) {}
-            @Override
-            public void windowActivated(WindowEvent e) {}
-            @Override
-            public void windowDeactivated(WindowEvent e) {}
-        });
         
         try {
             alarm=koneksiDB.ALARMLAB();
@@ -556,7 +486,7 @@ public class DlgCariPermintaanLab extends javax.swing.JDialog {
         internalFrame5.add(jLabel26);
         jLabel26.setBounds(6, 32, 100, 23);
 
-        TanggalPulang.setModel(new javax.swing.DefaultComboBoxModel(new String[] { "03-07-2024 09:16:46" }));
+        TanggalPulang.setModel(new javax.swing.DefaultComboBoxModel(new String[] { "18-12-2024 10:01:58" }));
         TanggalPulang.setDisplayFormat("dd-MM-yyyy HH:mm:ss");
         TanggalPulang.setName("TanggalPulang"); // NOI18N
         TanggalPulang.setOpaque(false);
@@ -593,9 +523,6 @@ public class DlgCariPermintaanLab extends javax.swing.JDialog {
         setUndecorated(true);
         setResizable(false);
         addWindowListener(new java.awt.event.WindowAdapter() {
-            public void windowOpened(java.awt.event.WindowEvent evt) {
-                formWindowOpened(evt);
-            }
             public void windowActivated(java.awt.event.WindowEvent evt) {
                 formWindowActivated(evt);
             }
@@ -1872,10 +1799,6 @@ private void tbLabRalanKeyPressed(java.awt.event.KeyEvent evt) {//GEN-FIRST:even
         }
 }//GEN-LAST:event_tbLabRalanKeyPressed
 
-    private void formWindowOpened(java.awt.event.WindowEvent evt) {//GEN-FIRST:event_formWindowOpened
-        pilihTab();
-    }//GEN-LAST:event_formWindowOpened
-
     private void TabRawatJalanMouseClicked(java.awt.event.MouseEvent evt) {//GEN-FIRST:event_TabRawatJalanMouseClicked
         TeksKosong();
         pilihRalan();
@@ -2108,6 +2031,33 @@ private void tbLabRalanKeyPressed(java.awt.event.KeyEvent evt) {//GEN-FIRST:even
     }//GEN-LAST:event_BtnSimpan4ActionPerformed
 
     private void BtnSeek3ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_BtnSeek3ActionPerformed
+        DlgCariDokter dokter=new DlgCariDokter(null,false);
+        dokter.addWindowListener(new WindowListener() {
+            @Override
+            public void windowOpened(WindowEvent e) {;}
+            @Override
+            public void windowClosing(WindowEvent e) {}
+            @Override
+            public void windowClosed(WindowEvent e) {
+                if(dokter.getTable().getSelectedRow()!= -1){ 
+                    if(TabPilihRawat.getSelectedIndex()==0){
+                        CrDokter.setText(dokter.getTable().getValueAt(dokter.getTable().getSelectedRow(),1).toString());
+                        CrDokter.requestFocus();
+                    }else if(TabPilihRawat.getSelectedIndex()==1){
+                        CrDokter2.setText(dokter.getTable().getValueAt(dokter.getTable().getSelectedRow(),1).toString());
+                        CrDokter2.requestFocus();
+                    }                        
+                }                
+            }
+            @Override
+            public void windowIconified(WindowEvent e) {}
+            @Override
+            public void windowDeiconified(WindowEvent e) {}
+            @Override
+            public void windowActivated(WindowEvent e) {}
+            @Override
+            public void windowDeactivated(WindowEvent e) {}
+        });
         dokter.isCek();
         dokter.TCari.requestFocus();
         dokter.setSize(internalFrame1.getWidth()-20,internalFrame1.getHeight()-20);
@@ -2116,6 +2066,28 @@ private void tbLabRalanKeyPressed(java.awt.event.KeyEvent evt) {//GEN-FIRST:even
     }//GEN-LAST:event_BtnSeek3ActionPerformed
 
     private void BtnSeek4ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_BtnSeek4ActionPerformed
+        DlgCariPoli poli=new DlgCariPoli(null,false);
+        poli.addWindowListener(new WindowListener() {
+            @Override
+            public void windowOpened(WindowEvent e) {}
+            @Override
+            public void windowClosing(WindowEvent e) {}
+            @Override
+            public void windowClosed(WindowEvent e) {
+                if(poli.getTable().getSelectedRow()!= -1){   
+                    CrPoli.setText(poli.getTable().getValueAt(poli.getTable().getSelectedRow(),1).toString());
+                    CrPoli.requestFocus();
+                }   
+            }
+            @Override
+            public void windowIconified(WindowEvent e) {}
+            @Override
+            public void windowDeiconified(WindowEvent e) {}
+            @Override
+            public void windowActivated(WindowEvent e) {}
+            @Override
+            public void windowDeactivated(WindowEvent e) {}
+        }); 
         poli.isCek();
         poli.setSize(internalFrame1.getWidth()-20,internalFrame1.getHeight()-20);
         poli.setLocationRelativeTo(internalFrame1);
@@ -2123,6 +2095,33 @@ private void tbLabRalanKeyPressed(java.awt.event.KeyEvent evt) {//GEN-FIRST:even
     }//GEN-LAST:event_BtnSeek4ActionPerformed
 
     private void BtnSeek5ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_BtnSeek5ActionPerformed
+        DlgCariDokter dokter=new DlgCariDokter(null,false);
+        dokter.addWindowListener(new WindowListener() {
+            @Override
+            public void windowOpened(WindowEvent e) {;}
+            @Override
+            public void windowClosing(WindowEvent e) {}
+            @Override
+            public void windowClosed(WindowEvent e) {
+                if(dokter.getTable().getSelectedRow()!= -1){ 
+                    if(TabPilihRawat.getSelectedIndex()==0){
+                        CrDokter.setText(dokter.getTable().getValueAt(dokter.getTable().getSelectedRow(),1).toString());
+                        CrDokter.requestFocus();
+                    }else if(TabPilihRawat.getSelectedIndex()==1){
+                        CrDokter2.setText(dokter.getTable().getValueAt(dokter.getTable().getSelectedRow(),1).toString());
+                        CrDokter2.requestFocus();
+                    }                        
+                }                
+            }
+            @Override
+            public void windowIconified(WindowEvent e) {}
+            @Override
+            public void windowDeiconified(WindowEvent e) {}
+            @Override
+            public void windowActivated(WindowEvent e) {}
+            @Override
+            public void windowDeactivated(WindowEvent e) {}
+        });
         dokter.isCek();
         dokter.TCari.requestFocus();
         dokter.setSize(internalFrame1.getWidth()-20,internalFrame1.getHeight()-20);
@@ -2131,6 +2130,28 @@ private void tbLabRalanKeyPressed(java.awt.event.KeyEvent evt) {//GEN-FIRST:even
     }//GEN-LAST:event_BtnSeek5ActionPerformed
 
     private void BtnSeek6ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_BtnSeek6ActionPerformed
+        DlgCariBangsal ruang=new DlgCariBangsal(null,false);
+        ruang.addWindowListener(new WindowListener() {
+            @Override
+            public void windowOpened(WindowEvent e) {}
+            @Override
+            public void windowClosing(WindowEvent e) {}
+            @Override
+            public void windowClosed(WindowEvent e) {
+                if(ruang.getTable().getSelectedRow()!= -1){   
+                    Kamar.setText(ruang.getTable().getValueAt(ruang.getTable().getSelectedRow(),1).toString());  
+                    Kamar.requestFocus();
+                }                      
+            }
+            @Override
+            public void windowIconified(WindowEvent e) {}
+            @Override
+            public void windowDeiconified(WindowEvent e) {}
+            @Override
+            public void windowActivated(WindowEvent e) {}
+            @Override
+            public void windowDeactivated(WindowEvent e) {}
+        });
         ruang.isCek();
         ruang.emptTeks();
         ruang.setSize(internalFrame1.getWidth()-20,internalFrame1.getHeight()-20);
@@ -4172,7 +4193,7 @@ private void tbLabRalanKeyPressed(java.awt.event.KeyEvent evt) {//GEN-FIRST:even
                     "where permintaan_lab.status='ralan' and permintaan_lab.tgl_permintaan between ? and ? "+
                     (semua?"":"and dokter.nm_dokter like ? and poliklinik.nm_poli like ? and "+
                     "(permintaan_lab.noorder like ? or permintaan_lab.no_rawat like ? or reg_periksa.no_rkm_medis like ? or "+
-                    "pasien.nm_pasien like ? or permintaan_lab.diagnosa_klinis like ? or dokter.nm_dokter like ? or penjab.png_jawab like ?)")+
+                    "pasien.nm_pasien like ? or permintaan_lab.diagnosa_klinis like ? or penjab.png_jawab like ?)")+
                     "order by permintaan_lab.tgl_permintaan,permintaan_lab.jam_permintaan desc");
             try {
                 ps.setString(1,Valid.SetTgl(Tgl1.getSelectedItem()+""));
@@ -4186,12 +4207,12 @@ private void tbLabRalanKeyPressed(java.awt.event.KeyEvent evt) {//GEN-FIRST:even
                     ps.setString(8,"%"+TCari.getText()+"%");
                     ps.setString(9,"%"+TCari.getText()+"%");
                     ps.setString(10,"%"+TCari.getText()+"%");
-                    ps.setString(11,"%"+TCari.getText()+"%");
                 }   
                     
                 rs=ps.executeQuery();
+                i=0;
                 while(rs.next()){
-                    tabMode.addRow(new String[]{
+                    tabMode.addRow(new Object[]{
                         rs.getString("noorder"),rs.getString("no_rawat"),rs.getString("no_rkm_medis")+" "+
                         rs.getString("nm_pasien"),rs.getString("tgl_permintaan"),rs.getString("jam_permintaan"),
                         rs.getString("tgl_sampel"),rs.getString("jam_sampel"),rs.getString("tgl_hasil"),
@@ -4199,6 +4220,7 @@ private void tbLabRalanKeyPressed(java.awt.event.KeyEvent evt) {//GEN-FIRST:even
                         rs.getString("nm_poli"),rs.getString("informasi_tambahan"),rs.getString("diagnosa_klinis"),
                         rs.getString("kd_pj"),rs.getString("png_jawab")
                     });
+                    i++;
                     ps2=koneksi.prepareStatement(
                             "select permintaan_pemeriksaan_lab.kd_jenis_prw,jns_perawatan_lab.nm_perawatan "+
                             "from permintaan_pemeriksaan_lab inner join jns_perawatan_lab on "+
@@ -4248,8 +4270,7 @@ private void tbLabRalanKeyPressed(java.awt.event.KeyEvent evt) {//GEN-FIRST:even
                         }
                     }
                 }
-                rs.last();
-                LCount.setText(""+rs.getRow());
+                LCount.setText(""+i);
             } catch (Exception e) {
                 System.out.println("Notif : "+e);
             } finally{
@@ -4292,7 +4313,7 @@ private void tbLabRalanKeyPressed(java.awt.event.KeyEvent evt) {//GEN-FIRST:even
                 (semua?"":"and dokter.nm_dokter like ? and poliklinik.nm_poli like ? and "+
                 "(permintaan_lab.noorder like ? or permintaan_lab.no_rawat like ? or reg_periksa.no_rkm_medis like ? or "+
                 "pasien.nm_pasien like ? or jns_perawatan_lab.nm_perawatan like ? or template_laboratorium.Pemeriksaan like ? or "+
-                "permintaan_lab.diagnosa_klinis like ? or dokter.nm_dokter like ? or penjab.png_jawab like ?)")+
+                "permintaan_lab.diagnosa_klinis like ? or penjab.png_jawab like ?)")+
                 "order by permintaan_lab.tgl_permintaan,permintaan_lab.jam_permintaan desc");
             try {
                 ps.setString(1,Valid.SetTgl(Tgl1.getSelectedItem()+""));
@@ -4308,7 +4329,6 @@ private void tbLabRalanKeyPressed(java.awt.event.KeyEvent evt) {//GEN-FIRST:even
                     ps.setString(10,"%"+TCari.getText()+"%");
                     ps.setString(11,"%"+TCari.getText()+"%");
                     ps.setString(12,"%"+TCari.getText()+"%");
-                    ps.setString(13,"%"+TCari.getText()+"%");
                 }
                 
                 rs=ps.executeQuery();
@@ -4326,7 +4346,7 @@ private void tbLabRalanKeyPressed(java.awt.event.KeyEvent evt) {//GEN-FIRST:even
                     if(!rs.getString("nilai_rujukan_pd").equals("")){
                         pa=" PA : "+rs.getString("nilai_rujukan_pa");
                     }
-                    tabMode2.addRow(new String[]{
+                    tabMode2.addRow(new Object[]{
                         rs.getString("noorder"),rs.getString("no_rawat"),rs.getString("no_rkm_medis")+" "+rs.getString("nm_pasien"),
                         rs.getString("nm_perawatan"),rs.getString("Pemeriksaan"),rs.getString("satuan"),ld+la+pd+pa,
                         rs.getString("tgl_permintaan"),rs.getString("jam_permintaan"),rs.getString("tgl_sampel"),
@@ -4425,7 +4445,7 @@ private void tbLabRalanKeyPressed(java.awt.event.KeyEvent evt) {//GEN-FIRST:even
         TCari.setText(pasien);
     }
 
-    public void pilihTab(){
+    private void pilihTab(){
         if(TabPilihRawat.getSelectedIndex()==0){
             pilihRalan();
         }else if(TabPilihRawat.getSelectedIndex()==1){
@@ -4433,19 +4453,19 @@ private void tbLabRalanKeyPressed(java.awt.event.KeyEvent evt) {//GEN-FIRST:even
         }
     }
     
-    public void pilihRalan(){
+    private void pilihRalan(){
         if(TabRawatJalan.getSelectedIndex()==0){
-            tampil();
+            runBackground(() -> tampil());
         }else if(TabRawatJalan.getSelectedIndex()==1){
-            tampil2();
+            runBackground(() -> tampil2());
         }
     }
     
-    public void pilihRanap(){
+    private void pilihRanap(){
         if(TabRawatInap.getSelectedIndex()==0){
-            tampil3();
+            runBackground(() -> tampil3());
         }else if(TabRawatInap.getSelectedIndex()==1){
-            tampil4();
+            runBackground(() -> tampil4());
         }
     }
     
@@ -4470,7 +4490,7 @@ private void tbLabRalanKeyPressed(java.awt.event.KeyEvent evt) {//GEN-FIRST:even
                     "where permintaan_lab.status='ranap' and permintaan_lab.tgl_permintaan between ? and ? "+
                     (semua?"":"and dokter.nm_dokter like ? and bangsal.nm_bangsal like ? and "+
                     "(permintaan_lab.noorder like ? or permintaan_lab.no_rawat like ? or reg_periksa.no_rkm_medis like ? or "+
-                    "pasien.nm_pasien like ? or permintaan_lab.diagnosa_klinis like ? or dokter.nm_dokter like ? or penjab.png_jawab like ? )")+
+                    "pasien.nm_pasien like ? or permintaan_lab.diagnosa_klinis like ? or penjab.png_jawab like ? )")+
                     "group by permintaan_lab.noorder order by permintaan_lab.tgl_permintaan,permintaan_lab.jam_permintaan desc,kamar_inap.tgl_masuk desc,kamar_inap.jam_masuk desc");
             }else{
                 ps=koneksi.prepareStatement(
@@ -4489,7 +4509,7 @@ private void tbLabRalanKeyPressed(java.awt.event.KeyEvent evt) {//GEN-FIRST:even
                     "where permintaan_lab.status='ranap' and kamar_inap.stts_pulang='-' and permintaan_lab.tgl_permintaan between ? and ? "+
                     (semua?"":"and dokter.nm_dokter like ? and bangsal.nm_bangsal like ? and "+
                     "(permintaan_lab.noorder like ? or permintaan_lab.no_rawat like ? or reg_periksa.no_rkm_medis like ? or "+
-                    "pasien.nm_pasien like ? or permintaan_lab.diagnosa_klinis like ? or dokter.nm_dokter like ? or penjab.png_jawab like ? )")+
+                    "pasien.nm_pasien like ? or permintaan_lab.diagnosa_klinis like ? or penjab.png_jawab like ? )")+
                     "group by permintaan_lab.noorder order by permintaan_lab.tgl_permintaan,permintaan_lab.jam_permintaan desc,kamar_inap.tgl_masuk desc,kamar_inap.jam_masuk desc");
             }
                 
@@ -4505,12 +4525,12 @@ private void tbLabRalanKeyPressed(java.awt.event.KeyEvent evt) {//GEN-FIRST:even
                     ps.setString(8,"%"+TCari.getText()+"%");
                     ps.setString(9,"%"+TCari.getText()+"%");
                     ps.setString(10,"%"+TCari.getText()+"%");
-                    ps.setString(11,"%"+TCari.getText()+"%");
                 }
                     
                 rs=ps.executeQuery();
+                i=0;
                 while(rs.next()){
-                    tabMode3.addRow(new String[]{
+                    tabMode3.addRow(new Object[]{
                         rs.getString("noorder"),rs.getString("no_rawat"),rs.getString("no_rkm_medis")+" "+
                         rs.getString("nm_pasien"),rs.getString("tgl_permintaan"),rs.getString("jam_permintaan"),
                         rs.getString("tgl_sampel"),rs.getString("jam_sampel"),rs.getString("tgl_hasil"),
@@ -4518,6 +4538,7 @@ private void tbLabRalanKeyPressed(java.awt.event.KeyEvent evt) {//GEN-FIRST:even
                         rs.getString("nm_bangsal"),rs.getString("informasi_tambahan"),rs.getString("diagnosa_klinis"),
                         rs.getString("kd_pj"),rs.getString("png_jawab")
                     });
+                    i++;
                     ps2=koneksi.prepareStatement(
                             "select permintaan_pemeriksaan_lab.kd_jenis_prw,jns_perawatan_lab.nm_perawatan "+
                             "from permintaan_pemeriksaan_lab inner join jns_perawatan_lab on "+
@@ -4567,8 +4588,7 @@ private void tbLabRalanKeyPressed(java.awt.event.KeyEvent evt) {//GEN-FIRST:even
                         }
                     }
                 }
-                rs.last();
-                LCount.setText(""+rs.getRow());
+                LCount.setText(""+i);
             } catch (Exception e) {
                 System.out.println("Notif : "+e);
             } finally{
@@ -4614,7 +4634,7 @@ private void tbLabRalanKeyPressed(java.awt.event.KeyEvent evt) {//GEN-FIRST:even
                         (semua?"":"and dokter.nm_dokter like ? and bangsal.nm_bangsal like ? and "+
                         "(permintaan_lab.noorder like ? or permintaan_lab.no_rawat like ? or reg_periksa.no_rkm_medis like ? or "+
                         "pasien.nm_pasien like ? or jns_perawatan_lab.nm_perawatan like ? or template_laboratorium.Pemeriksaan like ? or "+
-                        "permintaan_lab.diagnosa_klinis like ? or dokter.nm_dokter like ? or penjab.png_jawab like ?)")+
+                        "permintaan_lab.diagnosa_klinis like ? or penjab.png_jawab like ?)")+
                         "group by permintaan_lab.noorder,permintaan_detail_permintaan_lab.id_template order by permintaan_lab.tgl_permintaan,permintaan_lab.jam_permintaan desc,kamar_inap.tgl_masuk desc,kamar_inap.jam_masuk desc");
             }else{
                 ps=koneksi.prepareStatement(
@@ -4642,7 +4662,7 @@ private void tbLabRalanKeyPressed(java.awt.event.KeyEvent evt) {//GEN-FIRST:even
                         (semua?"":"and dokter.nm_dokter like ? and bangsal.nm_bangsal like ? and "+
                         "(permintaan_lab.noorder like ? or permintaan_lab.no_rawat like ? or reg_periksa.no_rkm_medis like ? or "+
                         "pasien.nm_pasien like ? or jns_perawatan_lab.nm_perawatan like ? or template_laboratorium.Pemeriksaan like ? or "+
-                        "permintaan_lab.diagnosa_klinis like ? or dokter.nm_dokter like ? or penjab.png_jawab like ?)")+
+                        "permintaan_lab.diagnosa_klinis like ? or penjab.png_jawab like ?)")+
                         "group by permintaan_lab.noorder,permintaan_detail_permintaan_lab.id_template order by permintaan_lab.tgl_permintaan,permintaan_lab.jam_permintaan desc,kamar_inap.tgl_masuk desc,kamar_inap.jam_masuk desc");
             }
                 
@@ -4660,7 +4680,6 @@ private void tbLabRalanKeyPressed(java.awt.event.KeyEvent evt) {//GEN-FIRST:even
                     ps.setString(10,"%"+TCari.getText()+"%");
                     ps.setString(11,"%"+TCari.getText()+"%");
                     ps.setString(12,"%"+TCari.getText()+"%");
-                    ps.setString(13,"%"+TCari.getText()+"%");
                 }
                     
                 rs=ps.executeQuery();
@@ -4678,7 +4697,7 @@ private void tbLabRalanKeyPressed(java.awt.event.KeyEvent evt) {//GEN-FIRST:even
                     if(!rs.getString("nilai_rujukan_pd").equals("")){
                         pa=" PA : "+rs.getString("nilai_rujukan_pa");
                     }
-                    tabMode4.addRow(new String[]{
+                    tabMode4.addRow(new Object[]{
                         rs.getString("noorder"),rs.getString("no_rawat"),rs.getString("no_rkm_medis")+" "+rs.getString("nm_pasien"),
                         rs.getString("nm_perawatan"),rs.getString("Pemeriksaan"),rs.getString("satuan"),ld+la+pd+pa,
                         rs.getString("tgl_permintaan"),rs.getString("jam_permintaan"),rs.getString("tgl_sampel"),rs.getString("jam_sampel"),
@@ -4860,4 +4879,21 @@ private void tbLabRalanKeyPressed(java.awt.event.KeyEvent evt) {//GEN-FIRST:even
         }
     }
     
+    private void runBackground(Runnable task) {
+        if (ceksukses) return;
+        ceksukses = true;
+
+        this.setCursor(Cursor.getPredefinedCursor(Cursor.WAIT_CURSOR));
+
+        executor.submit(() -> {
+            try {
+                task.run();
+            } finally {
+                ceksukses = false;
+                SwingUtilities.invokeLater(() -> {
+                    this.setCursor(Cursor.getDefaultCursor());
+                });
+            }
+        });
+    }
 }

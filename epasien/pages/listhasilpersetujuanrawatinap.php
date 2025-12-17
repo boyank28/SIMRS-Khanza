@@ -14,7 +14,7 @@
             "surat_persetujuan_rawat_inap.nama_alamat_keluarga_terdekat,surat_persetujuan_rawat_inap.bayar_secara from surat_persetujuan_rawat_inap where surat_persetujuan_rawat_inap.no_surat='$nopersetujuan'"
         );
         if($rsquerypersetujuan= mysqli_fetch_array($querypersetujuan)){
-            @$src = 'data: '.@mime_content_type("http://".host()."/webapps/persetujuanrawatinap/".$photo).';base64,'.base64_encode(file_get_contents("http://".host()."/webapps/persetujuanrawatinap/".$photo));
+            @$src = 'data: image/jpeg;base64,'.base64_encode(file_get_contents("http://".host()."/webapps/persetujuanrawatinap/".$photo));
             echo "<div class='row clearfix'>
                     <div class='col-lg-12 col-md-12 col-sm-12 col-xs-12'>
                         <div class='card'>
@@ -119,50 +119,6 @@
                         </div>
                     </div>
                   </div>";
-            
-            $BtnSimpan=isset($_POST['BtnSimpan'])?$_POST['BtnSimpan']:NULL;
-            if (isset($BtnSimpan)) {
-                $nopersetujuan     = validTeks4($_POST["nopersetujuan"],20);
-                if(file_exists("../webapps/persetujuanrawatinap/pages/upload/".$nopersetujuan."PI.jpeg")){
-                    @unlink("../webapps/persetujuanrawatinap/pages/upload/".$nopersetujuan."PI.jpeg");
-                }
-                $img               = $_POST["image"];
-                $folderPath        = "../webapps/persetujuanrawatinap/pages/upload/";
-                $image_parts       = explode(";base64,", $img);
-                $image_type_aux    = explode("image/", $image_parts[0]);
-                $image_type        = $image_type_aux[1];
-                $image_base64      = base64_decode($image_parts[1]);
-                $fileName          = $nopersetujuan."PI.jpeg";
-                $file              = $folderPath . $fileName;
-
-                if(file_put_contents($file, $image_base64)){
-                    if(file_exists("../webapps/persetujuanrawatinap/pages/upload/".$nopersetujuan."PI.jpeg")){
-                        if(Tambah3("surat_persetujuan_rawat_inap_pembuat_pernyataan","'".$nopersetujuan."','pages/upload/$fileName'")){
-                            JSRedirect2("index.php?act=PersetujuanRawatInap&hal=Persetujuan",4);
-                        }
-                    }else{
-                        echo "<div class='row clearfix'>
-                                <div class='col-lg-12 col-md-12 col-sm-12 col-xs-12'>
-                                   <div class='card'>
-                                       <div class='body'>
-                                           <center>Gagal melakukan persetujuan</center>
-                                       </div>
-                                   </div>
-                                </div>
-                             </div>";
-                    }
-                }else{
-                    echo "<div class='row clearfix'>
-                             <div class='col-lg-12 col-md-12 col-sm-12 col-xs-12'>
-                                <div class='card'>
-                                    <div class='body'>
-                                        <center>Gagal melakukan persetujuan</center>
-                                    </div>
-                                </div>
-                             </div>
-                          </div>";
-                }
-            }
         }else{
             echo "<div class='block-header'>
                         <h2><center>PERSETUJUAN PASIEN RAWAT INAP</center></h2>

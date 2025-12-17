@@ -4,15 +4,17 @@ import fungsi.koneksiDB;
 import fungsi.sekuel;
 import fungsi.validasi;
 import fungsi.akses;
+import java.awt.Cursor;
 import java.awt.Dimension;
 import java.awt.event.KeyEvent;
-import java.io.FileInputStream;
 import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
-import java.util.Properties;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
 import javax.swing.JOptionPane;
 import javax.swing.JTable;
+import javax.swing.SwingUtilities;
 import javax.swing.table.DefaultTableModel;
 import javax.swing.table.TableColumn;
 
@@ -23,9 +25,10 @@ public class DlgCopyResep extends javax.swing.JDialog {
     private Connection koneksi=koneksiDB.condb();
     private PreparedStatement ps,ps2,ps3;
     private ResultSet rs,rs2,rs3;
-    private String aktifkanparsial="no",norm="",kddokter="",kode_pj="",norawat="",status="";
-    private final Properties prop = new Properties();
+    private String aktifkanparsial="no",norm="",kddokter="",kode_pj="",norawat="",status="",TAMPILKANCOPYRESEPDOKTERLAIN="no";
     private int jmlparsial=0;
+    private final ExecutorService executor = Executors.newSingleThreadExecutor();
+    private volatile boolean ceksukses = false;
     
     /** Creates new form 
      * @param parent
@@ -71,12 +74,16 @@ public class DlgCopyResep extends javax.swing.JDialog {
         tbPemisahan.setDefaultRenderer(Object.class, new WarnaTable());
         
         try {
-            prop.loadFromXML(new FileInputStream("setting/database.xml"));
-            aktifkanparsial=prop.getProperty("AKTIFKANBILLINGPARSIAL");
+            aktifkanparsial=koneksiDB.AKTIFKANBILLINGPARSIAL();
         } catch (Exception ex) {
             aktifkanparsial="no";
         }
-
+        
+        try {
+            TAMPILKANCOPYRESEPDOKTERLAIN=koneksiDB.TAMPILKANCOPYRESEPDOKTERLAIN();
+        } catch (Exception ex) {
+            TAMPILKANCOPYRESEPDOKTERLAIN="no";
+        }
     }
 
     /** This method is called from within the constructor to
@@ -280,12 +287,12 @@ public class DlgCopyResep extends javax.swing.JDialog {
     }// </editor-fold>//GEN-END:initComponents
 
     private void BtnCariActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_BtnCariActionPerformed
-        tampil();
+        runBackground(() ->tampil());
 }//GEN-LAST:event_BtnCariActionPerformed
 
     private void BtnCariKeyPressed(java.awt.event.KeyEvent evt) {//GEN-FIRST:event_BtnCariKeyPressed
         if(evt.getKeyCode()==KeyEvent.VK_SPACE){
-            tampil();
+            runBackground(() ->tampil());
         }else{
             Valid.pindah(evt, DTPCari1,BtnKeluar);
         }
@@ -361,7 +368,7 @@ private void KdKeyPressed(java.awt.event.KeyEvent evt) {//GEN-FIRST:event_TKdKey
 */
 
     private void ChkTanggalItemStateChanged(java.awt.event.ItemEvent evt) {//GEN-FIRST:event_ChkTanggalItemStateChanged
-        tampil();
+        runBackground(() ->tampil());
     }//GEN-LAST:event_ChkTanggalItemStateChanged
 
     private void BtnEditActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_BtnEditActionPerformed
@@ -372,6 +379,8 @@ private void KdKeyPressed(java.awt.event.KeyEvent evt) {//GEN-FIRST:event_TKdKey
         }else{
             if(tbPemisahan.getValueAt(tbPemisahan.getSelectedRow(),0).toString().equals("")){
                 JOptionPane.showMessageDialog(rootPane,"Silahkan pilih No.Resep ..!!");
+            }else if(tbPemisahan.getValueAt(tbPemisahan.getSelectedRow(),8).toString().equals("Sudah Terlayani")){
+                JOptionPane.showMessageDialog(rootPane,"Resep sudah terlayani, silahkan konfirmasi bagian farmasi ..!!");
             }else {
                 jmlparsial=0;
                 if(aktifkanparsial.equals("yes")){
@@ -406,9 +415,11 @@ private void KdKeyPressed(java.awt.event.KeyEvent evt) {//GEN-FIRST:event_TKdKey
         }else{
             if(tbPemisahan.getValueAt(tbPemisahan.getSelectedRow(),0).toString().equals("")){
                 JOptionPane.showMessageDialog(rootPane,"Silahkan pilih No.Resep..!!");
+            }else if(tbPemisahan.getValueAt(tbPemisahan.getSelectedRow(),8).toString().equals("Sudah Terlayani")){
+                JOptionPane.showMessageDialog(rootPane,"Resep sudah terlayani, silahkan konfirmasi bagian farmasi ..!!");
             }else {
                 Sequel.meghapus("resep_obat","no_resep",tbPemisahan.getValueAt(tbPemisahan.getSelectedRow(),0).toString()); 
-                tampil();               
+                runBackground(() ->tampil());               
             }
         }
     }//GEN-LAST:event_BtnHapusActionPerformed
@@ -463,33 +474,41 @@ private void KdKeyPressed(java.awt.event.KeyEvent evt) {//GEN-FIRST:event_TKdKey
                     " if(resep_obat.tgl_perawatan='0000-00-00','Belum Terlayani','Sudah Terlayani') as status,resep_obat.status as status_asal "+
                     " from resep_obat inner join reg_periksa inner join pasien inner join dokter on resep_obat.no_rawat=reg_periksa.no_rawat  "+
                     " and reg_periksa.no_rkm_medis=pasien.no_rkm_medis and resep_obat.kd_dokter=dokter.kd_dokter where "+
-                    " resep_obat.tgl_peresepan<>'0000-00-00' and resep_obat.tgl_peresepan between ? and ? and pasien.no_rkm_medis=? and resep_obat.kd_dokter=? order by resep_obat.tgl_perawatan,resep_obat.jam desc");
+                    " resep_obat.tgl_peresepan<>'0000-00-00' and resep_obat.tgl_peresepan between ? and ? and pasien.no_rkm_medis=? "+
+                    (TAMPILKANCOPYRESEPDOKTERLAIN.equals("no")?"and resep_obat.kd_dokter=?":"")+
+                    " order by resep_obat.tgl_perawatan,resep_obat.jam desc");
             }else{
                 ps=koneksi.prepareStatement("select resep_obat.no_resep,resep_obat.tgl_peresepan,resep_obat.jam_peresepan,"+
                     " resep_obat.no_rawat,pasien.no_rkm_medis,pasien.nm_pasien,resep_obat.kd_dokter,dokter.nm_dokter, "+
                     " if(resep_obat.tgl_perawatan='0000-00-00','Belum Terlayani','Sudah Terlayani') as status,resep_obat.status as status_asal "+
                     " from resep_obat inner join reg_periksa inner join pasien inner join dokter on resep_obat.no_rawat=reg_periksa.no_rawat  "+
                     " and reg_periksa.no_rkm_medis=pasien.no_rkm_medis and resep_obat.kd_dokter=dokter.kd_dokter where "+
-                    " resep_obat.tgl_peresepan<>'0000-00-00' and pasien.no_rkm_medis=? and resep_obat.kd_dokter=? order by resep_obat.tgl_perawatan,resep_obat.jam desc");
+                    " resep_obat.tgl_peresepan<>'0000-00-00' and pasien.no_rkm_medis=? "+
+                    (TAMPILKANCOPYRESEPDOKTERLAIN.equals("no")?"and resep_obat.kd_dokter=?":"")+
+                    " order by resep_obat.tgl_perawatan,resep_obat.jam desc");
             }
             try{
                 if(ChkTanggal.isSelected()==true){
                     ps.setString(1,Valid.SetTgl(DTPCari1.getSelectedItem()+""));
                     ps.setString(2,Valid.SetTgl(DTPCari2.getSelectedItem()+""));
                     ps.setString(3,norm);
-                    ps.setString(4,kddokter);
+                    if(TAMPILKANCOPYRESEPDOKTERLAIN.equals("no")){
+                        ps.setString(4,kddokter);
+                    }
                 }else{
                     ps.setString(1,norm);
-                    ps.setString(2,kddokter);
+                    if(TAMPILKANCOPYRESEPDOKTERLAIN.equals("no")){
+                        ps.setString(2,kddokter);
+                    }
                 }                
                 rs=ps.executeQuery();
                 while(rs.next()){
-                    tabMode.addRow(new String[]{
+                    tabMode.addRow(new Object[]{
                         rs.getString("no_resep"),rs.getString("tgl_peresepan"),rs.getString("jam_peresepan"),rs.getString("no_rawat"),
                         rs.getString("no_rkm_medis"),rs.getString("nm_pasien"),rs.getString("nm_dokter"),rs.getString("kd_dokter"),
                         rs.getString("status")
                     });  
-                    tabMode.addRow(new String[]{"","Jumlah","Satuan","Aturan Pakai","Kode/No","Nama Obat/Racikan","","",rs.getString("status_asal").replaceAll("ralan","Rawat Jalan").replaceAll("ranap","Rawat Inap")});                
+                    tabMode.addRow(new Object[]{"","Jumlah","Satuan","Aturan Pakai","Kode/No","Nama Obat/Racikan","","",rs.getString("status_asal").replaceAll("ralan","Rawat Jalan").replaceAll("ranap","Rawat Inap")});                
                     ps2=koneksi.prepareStatement("select databarang.kode_brng,databarang.nama_brng,resep_dokter.jml,"+
                         "databarang.kode_sat,resep_dokter.aturan_pakai from resep_dokter inner join databarang on "+
                         "resep_dokter.kode_brng=databarang.kode_brng where resep_dokter.no_resep=? order by databarang.kode_brng");
@@ -497,7 +516,7 @@ private void KdKeyPressed(java.awt.event.KeyEvent evt) {//GEN-FIRST:event_TKdKey
                         ps2.setString(1,rs.getString("no_resep"));
                         rs2=ps2.executeQuery();
                         while(rs2.next()){
-                            tabMode.addRow(new String[]{
+                            tabMode.addRow(new Object[]{
                                 "",rs2.getString("jml"),rs2.getString("kode_sat"),rs2.getString("aturan_pakai"),rs2.getString("kode_brng"),rs2.getString("nama_brng"),"","",""
                             });
                         }
@@ -522,7 +541,7 @@ private void KdKeyPressed(java.awt.event.KeyEvent evt) {//GEN-FIRST:event_TKdKey
                         ps2.setString(1,rs.getString("no_resep"));
                         rs2=ps2.executeQuery();
                         while(rs2.next()){
-                            tabMode.addRow(new String[]{
+                            tabMode.addRow(new Object[]{
                                 "",rs2.getString("jml_dr"),rs2.getString("metode"),rs2.getString("aturan_pakai"),"No.Racik : "+rs2.getString("no_racik"),rs2.getString("nama_racik"),"","",""
                             });
                             ps3=koneksi.prepareStatement("select databarang.kode_brng,databarang.nama_brng,resep_dokter_racikan_detail.jml,"+
@@ -533,7 +552,7 @@ private void KdKeyPressed(java.awt.event.KeyEvent evt) {//GEN-FIRST:event_TKdKey
                                 ps3.setString(2,rs2.getString("no_racik"));
                                 rs3=ps3.executeQuery();
                                 while(rs3.next()){
-                                    tabMode.addRow(new String[]{
+                                    tabMode.addRow(new Object[]{
                                         "","   "+rs3.getString("jml"),"   "+rs3.getString("kode_sat"),"","   "+rs3.getString("kode_brng"),"   "+rs3.getString("nama_brng"),"","","",""
                                     });
                                 }
@@ -615,5 +634,23 @@ private void KdKeyPressed(java.awt.event.KeyEvent evt) {//GEN-FIRST:event_TKdKey
         resep.isCek();
         resep.tampilobat(tbPemisahan.getValueAt(tbPemisahan.getSelectedRow(),0).toString());
         resep.setVisible(true);   
+    }
+    
+    private void runBackground(Runnable task) {
+        if (ceksukses) return;
+        ceksukses = true;
+
+        this.setCursor(Cursor.getPredefinedCursor(Cursor.WAIT_CURSOR));
+
+        executor.submit(() -> {
+            try {
+                task.run();
+            } finally {
+                ceksukses = false;
+                SwingUtilities.invokeLater(() -> {
+                    this.setCursor(Cursor.getDefaultCursor());
+                });
+            }
+        });
     }
 }

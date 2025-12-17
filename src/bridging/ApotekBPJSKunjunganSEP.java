@@ -43,7 +43,6 @@ public final class ApotekBPJSKunjunganSEP extends javax.swing.JDialog {
     private final DefaultTableModel tabMode;
     private validasi Valid=new validasi();
     private sekuel Sequel=new sekuel();
-    private int i=0;
     private ApiApotekBPJS api=new ApiApotekBPJS();
     private String URL="",link="",utc="";
     private HttpHeaders headers;
@@ -318,7 +317,7 @@ public final class ApotekBPJSKunjunganSEP extends javax.swing.JDialog {
     private widget.Button BtnCari;
     private widget.Button BtnKeluar;
     private widget.Button BtnPrint;
-    private widget.TextBox NoSEP;
+    public widget.TextBox NoSEP;
     private widget.ScrollPane Scroll;
     private widget.InternalFrame internalFrame1;
     private widget.Label jLabel16;

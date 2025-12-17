@@ -4,6 +4,7 @@ import fungsi.koneksiDB;
 import fungsi.sekuel;
 import fungsi.validasi;
 import fungsi.akses;
+import java.awt.Cursor;
 import java.awt.Dimension;
 import java.awt.event.KeyEvent;
 import java.awt.event.KeyListener;
@@ -12,8 +13,11 @@ import java.awt.event.WindowListener;
 import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
 import javax.swing.JOptionPane;
 import javax.swing.JTable;
+import javax.swing.SwingUtilities;
 import javax.swing.table.DefaultTableModel;
 import javax.swing.table.TableColumn;
 
@@ -28,6 +32,8 @@ public class DlgPengaturanRekening extends javax.swing.JDialog {
     private validasi Valid=new validasi();
     private PreparedStatement ps,ps2;
     private ResultSet rs,rs2;
+    private final ExecutorService executor = Executors.newSingleThreadExecutor();
+    private volatile boolean ceksukses = false;
     private int i=0,barisdicopy=-1;
     private String Tindakan_Ralan, Laborat_Ralan, Radiologi_Ralan, Obat_Ralan, Registrasi_Ralan, 
             Tambahan_Ralan, Potongan_Ralan, Tindakan_Ranap, Laborat_Ranap, Radiologi_Ranap, 
@@ -94,10 +100,17 @@ public class DlgPengaturanRekening extends javax.swing.JDialog {
             Utang_Jasa_Sarana_Radiologi_Ranap,Beban_Jasa_Perujuk_Radiologi_Ranap,Utang_Jasa_Perujuk_Radiologi_Ranap,
             Beban_Jasa_Menejemen_Radiologi_Ranap,Utang_Jasa_Menejemen_Radiologi_Ranap,Kerugian_Klaim_BPJS_RVP,
             Lebih_Bayar_Klaim_BPJS_RVP,Piutang_BPJS_RVP,Sisa_Uang_Muka_Ranap,Kontra_Penerimaan_AsetInventaris,
-            Kontra_Hibah_Aset,Hibah_Non_Medis,Kontra_Hibah_Non_Medis,Bayar_JM_Dokter,PPN_Masukan,Pengadaan_Dapur,
+            Kontra_Hibah_Aset,Hibah_Non_Medis,Kontra_Hibah_Non_Medis,Beban_Hutang_Lain,PPN_Masukan,Pengadaan_Dapur,
             Stok_Keluar_Dapur,Kontra_Stok_Keluar_Dapur,PPN_Keluaran,Diskon_Piutang,Piutang_Tidak_Terbayar,Lebih_Bayar_Piutang,
             Penerimaan_Dapur,Kontra_Penerimaan_Dapur,Bayar_Pemesanan_Dapur,Retur_Beli_Dapur,Kontra_Retur_Beli_Dapur,
-            Hibah_Dapur,Kontra_Hibah_Dapur;
+            Hibah_Dapur,Kontra_Hibah_Dapur,Piutang_Jasa_Perusahaan,Pendapatan_Piutang_Jasa_Perusahaan,
+            Suspen_Piutang_Pelayanan_Lab_Kesling,Pendapatan_Pelayanan_Lab_Kesling,Beban_Jasa_Sarana_Pelayanan_Lab_Kesling, 
+            Utang_Jasa_sarana_Pelayanan_Lab_Kesling,HPP_BHP_Pelayanan_Lab_Kesling,Persediaan_BHP_Pelayanan_Lab_Kesling,
+            Beban_Jasa_PJLab_Pelayanan_Lab_Kesling,Utang_Jasa_PJLab_Pelayanan_Lab_Kesling,Beban_Jasa_PJPengujian_Pelayanan_Lab_Kesling, 
+            Utang_Jasa_PJPengujian_Pelayanan_Lab_Kesling,Beban_Jasa_PJVerifikasi_Pelayanan_Lab_Kesling,
+            Utang_Jasa_PJVerifikasi_Pelayanan_Lab_Kesling,Beban_Jasa_Analis_Pelayanan_Lab_Kesling,Utang_Jasa_Analis_Pelayanan_Lab_Kesling, 
+            Beban_KSO_Pelayanan_Lab_Kesling,Utang_KSO_Pelayanan_Lab_Kesling,Beban_Jasa_Menejemen_Pelayanan_Lab_Kesling,
+            Utang_Jasa_Menejemen_Pelayanan_Lab_Kesling;
     private String copyakun="";
     private DlgRekeningTahun rekening=new DlgRekeningTahun(null,false);
 
@@ -801,7 +814,7 @@ public class DlgPengaturanRekening extends javax.swing.JDialog {
             Kontra_Hibah_Aset=tbPengaturan.getValueAt(182,1).toString();
             Hibah_Non_Medis=tbPengaturan.getValueAt(183,1).toString();
             Kontra_Hibah_Non_Medis=tbPengaturan.getValueAt(184,1).toString();
-            Bayar_JM_Dokter=tbPengaturan.getValueAt(185,1).toString();
+            Beban_Hutang_Lain=tbPengaturan.getValueAt(185,1).toString();
             PPN_Masukan=tbPengaturan.getValueAt(186,1).toString();
             Pengadaan_Dapur=tbPengaturan.getValueAt(187,1).toString();
             Stok_Keluar_Dapur=tbPengaturan.getValueAt(188,1).toString();
@@ -817,6 +830,26 @@ public class DlgPengaturanRekening extends javax.swing.JDialog {
             Kontra_Retur_Beli_Dapur=tbPengaturan.getValueAt(198,1).toString();
             Hibah_Dapur=tbPengaturan.getValueAt(199,1).toString();
             Kontra_Hibah_Dapur=tbPengaturan.getValueAt(200,1).toString();
+            Piutang_Jasa_Perusahaan=tbPengaturan.getValueAt(201,1).toString();
+            Pendapatan_Piutang_Jasa_Perusahaan=tbPengaturan.getValueAt(202,1).toString();
+            Suspen_Piutang_Pelayanan_Lab_Kesling=tbPengaturan.getValueAt(203,1).toString();
+            Pendapatan_Pelayanan_Lab_Kesling=tbPengaturan.getValueAt(204,1).toString();
+            Beban_Jasa_Sarana_Pelayanan_Lab_Kesling=tbPengaturan.getValueAt(205,1).toString(); 
+            Utang_Jasa_sarana_Pelayanan_Lab_Kesling=tbPengaturan.getValueAt(206,1).toString();
+            HPP_BHP_Pelayanan_Lab_Kesling=tbPengaturan.getValueAt(207,1).toString();
+            Persediaan_BHP_Pelayanan_Lab_Kesling=tbPengaturan.getValueAt(208,1).toString();
+            Beban_Jasa_PJLab_Pelayanan_Lab_Kesling=tbPengaturan.getValueAt(209,1).toString();
+            Utang_Jasa_PJLab_Pelayanan_Lab_Kesling=tbPengaturan.getValueAt(210,1).toString();
+            Beban_Jasa_PJPengujian_Pelayanan_Lab_Kesling=tbPengaturan.getValueAt(211,1).toString(); 
+            Utang_Jasa_PJPengujian_Pelayanan_Lab_Kesling=tbPengaturan.getValueAt(212,1).toString();
+            Beban_Jasa_PJVerifikasi_Pelayanan_Lab_Kesling=tbPengaturan.getValueAt(213,1).toString();
+            Utang_Jasa_PJVerifikasi_Pelayanan_Lab_Kesling=tbPengaturan.getValueAt(214,1).toString();
+            Beban_Jasa_Analis_Pelayanan_Lab_Kesling=tbPengaturan.getValueAt(215,1).toString();
+            Utang_Jasa_Analis_Pelayanan_Lab_Kesling=tbPengaturan.getValueAt(216,1).toString(); 
+            Beban_KSO_Pelayanan_Lab_Kesling=tbPengaturan.getValueAt(217,1).toString();
+            Utang_KSO_Pelayanan_Lab_Kesling=tbPengaturan.getValueAt(218,1).toString();
+            Beban_Jasa_Menejemen_Pelayanan_Lab_Kesling=tbPengaturan.getValueAt(219,1).toString();
+            Utang_Jasa_Menejemen_Pelayanan_Lab_Kesling=tbPengaturan.getValueAt(220,1).toString();
             
             if(Pengadaan_Obat.equals("")||Pemesanan_Obat.equals("")||Kontra_Pemesanan_Obat.equals("")||Bayar_Pemesanan_Obat.equals("")||Penjualan_Obat.equals("")||
                     Piutang_Obat.equals("")||Kontra_Piutang_Obat.equals("")||Retur_Ke_Suplayer.equals("")||Kontra_Retur_Ke_Suplayer.equals("")||
@@ -870,10 +903,17 @@ public class DlgPengaturanRekening extends javax.swing.JDialog {
                     Utang_Jasa_Medik_Paramedis_Operasi_Ranap.equals("")||HPP_Obat_Operasi_Ranap.equals("")||Persediaan_Obat_Kamar_Operasi_Ranap.equals("")||
                     Harian_Ranap.equals("")||Uang_Muka_Ranap.equals("")||Piutang_Pasien_Ranap.equals("")||Kerugian_Klaim_BPJS_RVP.equals("")||Lebih_Bayar_Klaim_BPJS_RVP.equals("")||
                     Piutang_BPJS_RVP.equals("")||Sisa_Uang_Muka_Ranap.equals("")||Kontra_Penerimaan_AsetInventaris.equals("")||Kontra_Hibah_Aset.equals("")||
-                    Hibah_Non_Medis.equals("")||Kontra_Hibah_Non_Medis.equals("")||Bayar_JM_Dokter.equals("")||PPN_Masukan.equals("")||Stok_Keluar_Dapur.equals("")||
+                    Hibah_Non_Medis.equals("")||Kontra_Hibah_Non_Medis.equals("")||Beban_Hutang_Lain.equals("")||PPN_Masukan.equals("")||Stok_Keluar_Dapur.equals("")||
                     Kontra_Stok_Keluar_Dapur.equals("")||Pengadaan_Dapur.equals("")||PPN_Keluaran.equals("")||Diskon_Piutang.equals("")||Piutang_Tidak_Terbayar.equals("")||
                     Lebih_Bayar_Piutang.equals("")||Penerimaan_Dapur.equals("")||Kontra_Penerimaan_Dapur.equals("")||Bayar_Pemesanan_Dapur.equals("")||Retur_Beli_Dapur.equals("")||
-                    Kontra_Retur_Beli_Dapur.equals("")||Hibah_Dapur.equals("")||Kontra_Hibah_Dapur.equals("")){
+                    Kontra_Retur_Beli_Dapur.equals("")||Hibah_Dapur.equals("")||Kontra_Hibah_Dapur.equals("")||Piutang_Jasa_Perusahaan.equals("")||
+                    Pendapatan_Piutang_Jasa_Perusahaan.equals("")||Suspen_Piutang_Pelayanan_Lab_Kesling.equals("")||Pendapatan_Pelayanan_Lab_Kesling.equals("")||
+                    Beban_Jasa_Sarana_Pelayanan_Lab_Kesling.equals("")||Utang_Jasa_sarana_Pelayanan_Lab_Kesling.equals("")||HPP_BHP_Pelayanan_Lab_Kesling.equals("")||
+                    Persediaan_BHP_Pelayanan_Lab_Kesling.equals("")||Beban_Jasa_PJLab_Pelayanan_Lab_Kesling.equals("")||Utang_Jasa_PJLab_Pelayanan_Lab_Kesling.equals("")||
+                    Beban_Jasa_PJPengujian_Pelayanan_Lab_Kesling.equals("")||Utang_Jasa_PJPengujian_Pelayanan_Lab_Kesling.equals("")||Beban_Jasa_PJVerifikasi_Pelayanan_Lab_Kesling.equals("")||
+                    Utang_Jasa_PJVerifikasi_Pelayanan_Lab_Kesling.equals("")||Beban_Jasa_Analis_Pelayanan_Lab_Kesling.equals("")||Utang_Jasa_Analis_Pelayanan_Lab_Kesling.equals("")||
+                    Beban_KSO_Pelayanan_Lab_Kesling.equals("")||Utang_KSO_Pelayanan_Lab_Kesling.equals("")||Beban_Jasa_Menejemen_Pelayanan_Lab_Kesling.equals("")||
+                    Utang_Jasa_Menejemen_Pelayanan_Lab_Kesling.equals("")){
                     JOptionPane.showMessageDialog(null,"Silahkan lengkapi seluruh data Akun...!!!!");
                     tbPengaturan.requestFocus();
             }else{
@@ -927,15 +967,22 @@ public class DlgPengaturanRekening extends javax.swing.JDialog {
                     Kontra_Retur_Beli_Non_Medis,Retur_Jual_Toko,Kontra_Retur_Jual_Toko,Retur_Piutang_Toko,
                     Kontra_Retur_Piutang_Toko,Kerugian_Klaim_BPJS_RVP,Lebih_Bayar_Klaim_BPJS_RVP,Piutang_BPJS_RVP,
                     Kontra_Penerimaan_AsetInventaris,Kontra_Hibah_Aset,Hibah_Non_Medis,Kontra_Hibah_Non_Medis,
-                    Bayar_JM_Dokter,PPN_Masukan,Pengadaan_Dapur,Stok_Keluar_Dapur,Kontra_Stok_Keluar_Dapur,
+                    Beban_Hutang_Lain,PPN_Masukan,Pengadaan_Dapur,Stok_Keluar_Dapur,Kontra_Stok_Keluar_Dapur,
                     PPN_Keluaran,Diskon_Piutang,Piutang_Tidak_Terbayar,Lebih_Bayar_Piutang
                 });
                 Sequel.queryu("delete from set_akun2");
-                Sequel.menyimpan("set_akun2","?,?,?,?,?,?,?",7,new String[]{
-                    Penerimaan_Dapur,Kontra_Penerimaan_Dapur,Bayar_Pemesanan_Dapur,Retur_Beli_Dapur,Kontra_Retur_Beli_Dapur,Hibah_Dapur,Kontra_Hibah_Dapur
+                Sequel.menyimpan("set_akun2","?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?",27,new String[]{
+                    Penerimaan_Dapur,Kontra_Penerimaan_Dapur,Bayar_Pemesanan_Dapur,Retur_Beli_Dapur,Kontra_Retur_Beli_Dapur,
+                    Hibah_Dapur,Kontra_Hibah_Dapur,Piutang_Jasa_Perusahaan,Pendapatan_Piutang_Jasa_Perusahaan,Suspen_Piutang_Pelayanan_Lab_Kesling,
+                    Pendapatan_Pelayanan_Lab_Kesling,Beban_Jasa_Sarana_Pelayanan_Lab_Kesling,Utang_Jasa_sarana_Pelayanan_Lab_Kesling,
+                    HPP_BHP_Pelayanan_Lab_Kesling,Persediaan_BHP_Pelayanan_Lab_Kesling,Beban_Jasa_PJLab_Pelayanan_Lab_Kesling,
+                    Utang_Jasa_PJLab_Pelayanan_Lab_Kesling,Beban_Jasa_PJPengujian_Pelayanan_Lab_Kesling,Utang_Jasa_PJPengujian_Pelayanan_Lab_Kesling,
+                    Beban_Jasa_PJVerifikasi_Pelayanan_Lab_Kesling,Utang_Jasa_PJVerifikasi_Pelayanan_Lab_Kesling,Beban_Jasa_Analis_Pelayanan_Lab_Kesling,
+                    Utang_Jasa_Analis_Pelayanan_Lab_Kesling,Beban_KSO_Pelayanan_Lab_Kesling,Utang_KSO_Pelayanan_Lab_Kesling,
+                    Beban_Jasa_Menejemen_Pelayanan_Lab_Kesling,Utang_Jasa_Menejemen_Pelayanan_Lab_Kesling
                 });
                 JOptionPane.showMessageDialog(null,"Proses selesai...!!!!");
-                tampil();
+                runBackground(() ->tampil());
             }
         }else if(TabRawat.getSelectedIndex()==1){
             for(i=0;i<tbPengaturanRalan.getRowCount();i++){ 
@@ -960,7 +1007,7 @@ public class DlgPengaturanRekening extends javax.swing.JDialog {
                     });
                 }
             }
-            tampilralan();
+            runBackground(() ->tampilralan());
         }else if(TabRawat.getSelectedIndex()==2){
             for(i=0;i<tbPengaturanRanap.getRowCount();i++){ 
                 if((!tbPengaturanRanap.getValueAt(i,6).equals(""))&&(!tbPengaturanRanap.getValueAt(i,7).equals(""))&&(!tbPengaturanRanap.getValueAt(i,8).equals(""))&&
@@ -984,7 +1031,7 @@ public class DlgPengaturanRekening extends javax.swing.JDialog {
                     });
                 }
             }
-            tampilranap();
+            runBackground(() ->tampilranap());
         }     
 }//GEN-LAST:event_BtnSimpanActionPerformed
 
@@ -1005,7 +1052,7 @@ public class DlgPengaturanRekening extends javax.swing.JDialog {
 }//GEN-LAST:event_BtnKeluarKeyPressed
 
     private void formWindowOpened(java.awt.event.WindowEvent evt) {//GEN-FIRST:event_formWindowOpened
-        tampil();
+        runBackground(() ->tampil());
     }//GEN-LAST:event_formWindowOpened
 
     private void tbPengaturanKeyPressed(java.awt.event.KeyEvent evt) {//GEN-FIRST:event_tbPengaturanKeyPressed
@@ -1027,11 +1074,11 @@ public class DlgPengaturanRekening extends javax.swing.JDialog {
 
     private void TabRawatMouseClicked(java.awt.event.MouseEvent evt) {//GEN-FIRST:event_TabRawatMouseClicked
         if(TabRawat.getSelectedIndex()==0){
-            tampil();
+            runBackground(() ->tampil());
         }else if(TabRawat.getSelectedIndex()==1){
-            tampilralan();
+            runBackground(() ->tampilralan());
         }else if(TabRawat.getSelectedIndex()==2){
-            tampilranap();
+            runBackground(() ->tampilranap());
         }
     }//GEN-LAST:event_TabRawatMouseClicked
 
@@ -1160,7 +1207,7 @@ public class DlgPengaturanRekening extends javax.swing.JDialog {
                             tbPengaturanRalan.getValueAt(barisdicopy,23).toString(),tbPengaturanRalan.getValueAt(barisdicopy,25).toString(),
                             tbPengaturanRalan.getValueAt(barisdicopy,27).toString(),tbPengaturanRalan.getValueAt(barisdicopy,29).toString()
                         });
-                        tampilralan();
+                        runBackground(() ->tampilralan());
                         barisdicopy=-1;
                         copyakun="";
                     }else{
@@ -1392,7 +1439,7 @@ public class DlgPengaturanRekening extends javax.swing.JDialog {
             Kontra_Hibah_Aset="";
             Hibah_Non_Medis="";
             Kontra_Hibah_Non_Medis="";
-            Bayar_JM_Dokter="";
+            Beban_Hutang_Lain="";
             PPN_Masukan="";
             Pengadaan_Dapur="";
             Stok_Keluar_Dapur="";
@@ -1408,6 +1455,26 @@ public class DlgPengaturanRekening extends javax.swing.JDialog {
             Kontra_Retur_Beli_Dapur="";
             Hibah_Dapur="";
             Kontra_Hibah_Dapur="";
+            Piutang_Jasa_Perusahaan="";
+            Pendapatan_Piutang_Jasa_Perusahaan="";
+            Suspen_Piutang_Pelayanan_Lab_Kesling="";
+            Pendapatan_Pelayanan_Lab_Kesling="";
+            Beban_Jasa_Sarana_Pelayanan_Lab_Kesling="";
+            Utang_Jasa_sarana_Pelayanan_Lab_Kesling="";
+            HPP_BHP_Pelayanan_Lab_Kesling="";
+            Persediaan_BHP_Pelayanan_Lab_Kesling="";
+            Beban_Jasa_PJLab_Pelayanan_Lab_Kesling="";
+            Utang_Jasa_PJLab_Pelayanan_Lab_Kesling="";
+            Beban_Jasa_PJPengujian_Pelayanan_Lab_Kesling="";
+            Utang_Jasa_PJPengujian_Pelayanan_Lab_Kesling="";
+            Beban_Jasa_PJVerifikasi_Pelayanan_Lab_Kesling="";
+            Utang_Jasa_PJVerifikasi_Pelayanan_Lab_Kesling="";
+            Beban_Jasa_Analis_Pelayanan_Lab_Kesling="";
+            Utang_Jasa_Analis_Pelayanan_Lab_Kesling="";
+            Beban_KSO_Pelayanan_Lab_Kesling="";
+            Utang_KSO_Pelayanan_Lab_Kesling="";
+            Beban_Jasa_Menejemen_Pelayanan_Lab_Kesling="";
+            Utang_Jasa_Menejemen_Pelayanan_Lab_Kesling="";
             
             ps=koneksi.prepareStatement("select * from set_akun_ralan");
             try {
@@ -1646,7 +1713,7 @@ public class DlgPengaturanRekening extends javax.swing.JDialog {
                     Kontra_Hibah_Aset=rs.getString("Kontra_Hibah_Aset");
                     Hibah_Non_Medis=rs.getString("Hibah_Non_Medis");
                     Kontra_Hibah_Non_Medis=rs.getString("Kontra_Hibah_Non_Medis");
-                    Bayar_JM_Dokter=rs.getString("Bayar_JM_Dokter");
+                    Beban_Hutang_Lain=rs.getString("Beban_Hutang_Lain");
                     PPN_Masukan=rs.getString("PPN_Masukan");
                     Pengadaan_Dapur=rs.getString("Pengadaan_Dapur");
                     Stok_Keluar_Dapur=rs.getString("Stok_Keluar_Dapur");
@@ -1678,6 +1745,27 @@ public class DlgPengaturanRekening extends javax.swing.JDialog {
                     Kontra_Retur_Beli_Dapur=rs.getString("Kontra_Retur_Beli_Dapur");
                     Hibah_Dapur=rs.getString("Hibah_Dapur");
                     Kontra_Hibah_Dapur=rs.getString("Kontra_Hibah_Dapur");
+                    Piutang_Jasa_Perusahaan=rs.getString("Piutang_Jasa_Perusahaan");
+                    Pendapatan_Piutang_Jasa_Perusahaan=rs.getString("Pendapatan_Piutang_Jasa_Perusahaan");
+                    Suspen_Piutang_Pelayanan_Lab_Kesling=rs.getString("Suspen_Piutang_Pelayanan_Lab_Kesling");
+                    Pendapatan_Pelayanan_Lab_Kesling=rs.getString("Pendapatan_Pelayanan_Lab_Kesling");
+                    Beban_Jasa_Sarana_Pelayanan_Lab_Kesling=rs.getString("Beban_Jasa_Sarana_Pelayanan_Lab_Kesling");
+                    Utang_Jasa_sarana_Pelayanan_Lab_Kesling=rs.getString("Utang_Jasa_sarana_Pelayanan_Lab_Kesling");
+                    HPP_BHP_Pelayanan_Lab_Kesling=rs.getString("HPP_BHP_Pelayanan_Lab_Kesling");
+                    Persediaan_BHP_Pelayanan_Lab_Kesling=rs.getString("Persediaan_BHP_Pelayanan_Lab_Kesling");
+                    Beban_Jasa_PJLab_Pelayanan_Lab_Kesling=rs.getString("Beban_Jasa_PJLab_Pelayanan_Lab_Kesling");
+                    Utang_Jasa_PJLab_Pelayanan_Lab_Kesling=rs.getString("Utang_Jasa_PJLab_Pelayanan_Lab_Kesling");
+                    Beban_Jasa_PJPengujian_Pelayanan_Lab_Kesling=rs.getString("Beban_Jasa_PJPengujian_Pelayanan_Lab_Kesling");
+                    Utang_Jasa_PJPengujian_Pelayanan_Lab_Kesling=rs.getString("Utang_Jasa_PJPengujian_Pelayanan_Lab_Kesling");
+                    Beban_Jasa_PJVerifikasi_Pelayanan_Lab_Kesling=rs.getString("Beban_Jasa_PJVerifikasi_Pelayanan_Lab_Kesling");
+                    Utang_Jasa_PJVerifikasi_Pelayanan_Lab_Kesling=rs.getString("Utang_Jasa_PJVerifikasi_Pelayanan_Lab_Kesling");
+                    Beban_Jasa_Analis_Pelayanan_Lab_Kesling=rs.getString("Beban_Jasa_Analis_Pelayanan_Lab_Kesling");
+                    Utang_Jasa_Analis_Pelayanan_Lab_Kesling=rs.getString("Utang_Jasa_Analis_Pelayanan_Lab_Kesling");
+                    Beban_KSO_Pelayanan_Lab_Kesling=rs.getString("Beban_KSO_Pelayanan_Lab_Kesling");
+                    Utang_KSO_Pelayanan_Lab_Kesling=rs.getString("Utang_KSO_Pelayanan_Lab_Kesling");
+                    Beban_Jasa_Menejemen_Pelayanan_Lab_Kesling=rs.getString("Beban_Jasa_Menejemen_Pelayanan_Lab_Kesling");
+                    Utang_Jasa_Menejemen_Pelayanan_Lab_Kesling=rs.getString("Utang_Jasa_Menejemen_Pelayanan_Lab_Kesling");
+                    
                 }               
             } catch (Exception e) {
                 System.out.println("Notif Set Akun :"+e);
@@ -2615,10 +2703,10 @@ public class DlgPengaturanRekening extends javax.swing.JDialog {
                 Sequel.cariIsi("select rekening.tipe from rekening where rekening.kd_rek=?",Kontra_Hibah_Non_Medis),
                 Sequel.cariIsi("select rekening.balance from rekening where rekening.kd_rek=?",Kontra_Hibah_Non_Medis)
             });
-            tabMode.addRow(new Object[]{" [Debet] Bayar Jasa Medis Dokter pada menu Bayar JM Dokter",Bayar_JM_Dokter,
-                Sequel.cariIsi("select rekening.nm_rek from rekening where rekening.kd_rek=?",Bayar_JM_Dokter),
-                Sequel.cariIsi("select rekening.tipe from rekening where rekening.kd_rek=?",Bayar_JM_Dokter),
-                Sequel.cariIsi("select rekening.balance from rekening where rekening.kd_rek=?",Bayar_JM_Dokter)
+            tabMode.addRow(new Object[]{" [Debet] Beban Hutang Lain pada menu Beban Hutang Lain",Beban_Hutang_Lain,
+                Sequel.cariIsi("select rekening.nm_rek from rekening where rekening.kd_rek=?",Beban_Hutang_Lain),
+                Sequel.cariIsi("select rekening.tipe from rekening where rekening.kd_rek=?",Beban_Hutang_Lain),
+                Sequel.cariIsi("select rekening.balance from rekening where rekening.kd_rek=?",Beban_Hutang_Lain)
             });
             tabMode.addRow(new Object[]{" [Debet] PPN Masukan Barang/Aset Inventaris/Alkes/BHP/Obat/Farmasi/Dapur",PPN_Masukan,
                 Sequel.cariIsi("select rekening.nm_rek from rekening where rekening.kd_rek=?",PPN_Masukan),
@@ -2694,6 +2782,106 @@ public class DlgPengaturanRekening extends javax.swing.JDialog {
                 Sequel.cariIsi("select rekening.nm_rek from rekening where rekening.kd_rek=?",Kontra_Hibah_Dapur),
                 Sequel.cariIsi("select rekening.tipe from rekening where rekening.kd_rek=?",Kontra_Hibah_Dapur),
                 Sequel.cariIsi("select rekening.balance from rekening where rekening.kd_rek=?",Kontra_Hibah_Dapur)
+            });
+            tabMode.addRow(new Object[]{" [Debit] Piutang Jasa Pelayanan Perusahaan pada menu Piutang Jasa Perusahaan",Piutang_Jasa_Perusahaan,
+                Sequel.cariIsi("select rekening.nm_rek from rekening where rekening.kd_rek=?",Piutang_Jasa_Perusahaan),
+                Sequel.cariIsi("select rekening.tipe from rekening where rekening.kd_rek=?",Piutang_Jasa_Perusahaan),
+                Sequel.cariIsi("select rekening.balance from rekening where rekening.kd_rek=?",Piutang_Jasa_Perusahaan)
+            });
+            tabMode.addRow(new Object[]{" [Kredit] Pendapatan Dari Piutang Jasa Pelayanan Perusahaan pada menu Piutang Jasa Perusahaan",Pendapatan_Piutang_Jasa_Perusahaan,
+                Sequel.cariIsi("select rekening.nm_rek from rekening where rekening.kd_rek=?",Pendapatan_Piutang_Jasa_Perusahaan),
+                Sequel.cariIsi("select rekening.tipe from rekening where rekening.kd_rek=?",Pendapatan_Piutang_Jasa_Perusahaan),
+                Sequel.cariIsi("select rekening.balance from rekening where rekening.kd_rek=?",Pendapatan_Piutang_Jasa_Perusahaan)
+            });
+            tabMode.addRow(new Object[]{" [Debet] Akun Suspen Piutang Pelayanan Lab Kesehatan Lingkungan Pada Menu Billing Lab Kesling",Suspen_Piutang_Pelayanan_Lab_Kesling,
+                Sequel.cariIsi("select rekening.nm_rek from rekening where rekening.kd_rek=?",Suspen_Piutang_Pelayanan_Lab_Kesling),
+                Sequel.cariIsi("select rekening.tipe from rekening where rekening.kd_rek=?",Suspen_Piutang_Pelayanan_Lab_Kesling),
+                Sequel.cariIsi("select rekening.balance from rekening where rekening.kd_rek=?",Suspen_Piutang_Pelayanan_Lab_Kesling)
+            });
+            tabMode.addRow(new Object[]{" [Kredit] Akun Pendapatan Pelayanan Lab Kesehatan Lingkungan Pada Menu Billing Lab Kesling",Pendapatan_Pelayanan_Lab_Kesling,
+                Sequel.cariIsi("select rekening.nm_rek from rekening where rekening.kd_rek=?",Pendapatan_Pelayanan_Lab_Kesling),
+                Sequel.cariIsi("select rekening.tipe from rekening where rekening.kd_rek=?",Pendapatan_Pelayanan_Lab_Kesling),
+                Sequel.cariIsi("select rekening.balance from rekening where rekening.kd_rek=?",Pendapatan_Pelayanan_Lab_Kesling)
+            });
+            tabMode.addRow(new Object[]{" [Debet] Akun Beban Jasa Sarana Pelayanan Lab Kesehatan Lingkungan Pada Menu Billing Lab Kesling",Beban_Jasa_Sarana_Pelayanan_Lab_Kesling,
+                Sequel.cariIsi("select rekening.nm_rek from rekening where rekening.kd_rek=?",Beban_Jasa_Sarana_Pelayanan_Lab_Kesling),
+                Sequel.cariIsi("select rekening.tipe from rekening where rekening.kd_rek=?",Beban_Jasa_Sarana_Pelayanan_Lab_Kesling),
+                Sequel.cariIsi("select rekening.balance from rekening where rekening.kd_rek=?",Beban_Jasa_Sarana_Pelayanan_Lab_Kesling)
+            });
+            tabMode.addRow(new Object[]{" [Kredit] Akun Utang Jasa Sarana Pelayanan Lab Kesehatan Lingkungan Pada Menu Billing Lab Kesling",Utang_Jasa_sarana_Pelayanan_Lab_Kesling,
+                Sequel.cariIsi("select rekening.nm_rek from rekening where rekening.kd_rek=?",Utang_Jasa_sarana_Pelayanan_Lab_Kesling),
+                Sequel.cariIsi("select rekening.tipe from rekening where rekening.kd_rek=?",Utang_Jasa_sarana_Pelayanan_Lab_Kesling),
+                Sequel.cariIsi("select rekening.balance from rekening where rekening.kd_rek=?",Utang_Jasa_sarana_Pelayanan_Lab_Kesling)
+            });
+            tabMode.addRow(new Object[]{" [Debet] Akun HPP BHP Pelayanan Lab Kesehatan Lingkungan Pada Menu Billing Lab Kesling",HPP_BHP_Pelayanan_Lab_Kesling,
+                Sequel.cariIsi("select rekening.nm_rek from rekening where rekening.kd_rek=?",HPP_BHP_Pelayanan_Lab_Kesling),
+                Sequel.cariIsi("select rekening.tipe from rekening where rekening.kd_rek=?",HPP_BHP_Pelayanan_Lab_Kesling),
+                Sequel.cariIsi("select rekening.balance from rekening where rekening.kd_rek=?",HPP_BHP_Pelayanan_Lab_Kesling)
+            });
+            tabMode.addRow(new Object[]{" [Kredit] Akun Persediaan BHP Pelayanan Lab Kesehatan Lingkungan Pada Menu Billing Lab Kesling",Persediaan_BHP_Pelayanan_Lab_Kesling,
+                Sequel.cariIsi("select rekening.nm_rek from rekening where rekening.kd_rek=?",Persediaan_BHP_Pelayanan_Lab_Kesling),
+                Sequel.cariIsi("select rekening.tipe from rekening where rekening.kd_rek=?",Persediaan_BHP_Pelayanan_Lab_Kesling),
+                Sequel.cariIsi("select rekening.balance from rekening where rekening.kd_rek=?",Persediaan_BHP_Pelayanan_Lab_Kesling)
+            });
+            tabMode.addRow(new Object[]{" [Debet] Akun Beban Jasa PJ Laborat Pelayanan Lab Kesehatan Lingkungan Pada Menu Billing Lab Kesling",Beban_Jasa_PJLab_Pelayanan_Lab_Kesling,
+                Sequel.cariIsi("select rekening.nm_rek from rekening where rekening.kd_rek=?",Beban_Jasa_PJLab_Pelayanan_Lab_Kesling),
+                Sequel.cariIsi("select rekening.tipe from rekening where rekening.kd_rek=?",Beban_Jasa_PJLab_Pelayanan_Lab_Kesling),
+                Sequel.cariIsi("select rekening.balance from rekening where rekening.kd_rek=?",Beban_Jasa_PJLab_Pelayanan_Lab_Kesling)
+            });
+            tabMode.addRow(new Object[]{" [Kredit] Akun Utang Jasa PJ Laborat Pelayanan Lab Kesehatan Lingkungan Pada Menu Billing Lab Kesling",Utang_Jasa_PJLab_Pelayanan_Lab_Kesling,
+                Sequel.cariIsi("select rekening.nm_rek from rekening where rekening.kd_rek=?",Utang_Jasa_PJLab_Pelayanan_Lab_Kesling),
+                Sequel.cariIsi("select rekening.tipe from rekening where rekening.kd_rek=?",Utang_Jasa_PJLab_Pelayanan_Lab_Kesling),
+                Sequel.cariIsi("select rekening.balance from rekening where rekening.kd_rek=?",Utang_Jasa_PJLab_Pelayanan_Lab_Kesling)
+            });
+            tabMode.addRow(new Object[]{" [Debet] Akun Beban Jasa PJ Pengujian Pelayanan Lab Kesehatan Lingkungan Pada Menu Billing Lab Kesling",Beban_Jasa_PJPengujian_Pelayanan_Lab_Kesling,
+                Sequel.cariIsi("select rekening.nm_rek from rekening where rekening.kd_rek=?",Beban_Jasa_PJPengujian_Pelayanan_Lab_Kesling),
+                Sequel.cariIsi("select rekening.tipe from rekening where rekening.kd_rek=?",Beban_Jasa_PJPengujian_Pelayanan_Lab_Kesling),
+                Sequel.cariIsi("select rekening.balance from rekening where rekening.kd_rek=?",Beban_Jasa_PJPengujian_Pelayanan_Lab_Kesling)
+            });
+            tabMode.addRow(new Object[]{" [Kredit] Akun Utang Jasa PJ Pengujian Pelayanan Lab Kesehatan Lingkungan Pada Menu Billing Lab Kesling",Utang_Jasa_PJPengujian_Pelayanan_Lab_Kesling,
+                Sequel.cariIsi("select rekening.nm_rek from rekening where rekening.kd_rek=?",Utang_Jasa_PJPengujian_Pelayanan_Lab_Kesling),
+                Sequel.cariIsi("select rekening.tipe from rekening where rekening.kd_rek=?",Utang_Jasa_PJPengujian_Pelayanan_Lab_Kesling),
+                Sequel.cariIsi("select rekening.balance from rekening where rekening.kd_rek=?",Utang_Jasa_PJPengujian_Pelayanan_Lab_Kesling)
+            });
+            tabMode.addRow(new Object[]{" [Debet] Akun Beban Jasa PJ Verifikasi Pelayanan Lab Kesehatan Lingkungan Pada Menu Billing Lab Kesling",Beban_Jasa_PJVerifikasi_Pelayanan_Lab_Kesling,
+                Sequel.cariIsi("select rekening.nm_rek from rekening where rekening.kd_rek=?",Beban_Jasa_PJVerifikasi_Pelayanan_Lab_Kesling),
+                Sequel.cariIsi("select rekening.tipe from rekening where rekening.kd_rek=?",Beban_Jasa_PJVerifikasi_Pelayanan_Lab_Kesling),
+                Sequel.cariIsi("select rekening.balance from rekening where rekening.kd_rek=?",Beban_Jasa_PJVerifikasi_Pelayanan_Lab_Kesling)
+            });
+            tabMode.addRow(new Object[]{" [Kredit] Akun Utang Jasa PJ Verifikasi Pelayanan Lab Kesehatan Lingkungan Pada Menu Billing Lab Kesling",Utang_Jasa_PJVerifikasi_Pelayanan_Lab_Kesling,
+                Sequel.cariIsi("select rekening.nm_rek from rekening where rekening.kd_rek=?",Utang_Jasa_PJVerifikasi_Pelayanan_Lab_Kesling),
+                Sequel.cariIsi("select rekening.tipe from rekening where rekening.kd_rek=?",Utang_Jasa_PJVerifikasi_Pelayanan_Lab_Kesling),
+                Sequel.cariIsi("select rekening.balance from rekening where rekening.kd_rek=?",Utang_Jasa_PJVerifikasi_Pelayanan_Lab_Kesling)
+            });
+            tabMode.addRow(new Object[]{" [Debet] Akun Beban Jasa Analis Pelayanan Lab Kesehatan Lingkungan Pada Menu Billing Lab Kesling",Beban_Jasa_Analis_Pelayanan_Lab_Kesling,
+                Sequel.cariIsi("select rekening.nm_rek from rekening where rekening.kd_rek=?",Beban_Jasa_Analis_Pelayanan_Lab_Kesling),
+                Sequel.cariIsi("select rekening.tipe from rekening where rekening.kd_rek=?",Beban_Jasa_Analis_Pelayanan_Lab_Kesling),
+                Sequel.cariIsi("select rekening.balance from rekening where rekening.kd_rek=?",Beban_Jasa_Analis_Pelayanan_Lab_Kesling)
+            });
+            tabMode.addRow(new Object[]{" [Kredit] Akun Utang Jasa Analis Pelayanan Lab Kesehatan Lingkungan Pada Menu Billing Lab Kesling",Utang_Jasa_Analis_Pelayanan_Lab_Kesling,
+                Sequel.cariIsi("select rekening.nm_rek from rekening where rekening.kd_rek=?",Utang_Jasa_Analis_Pelayanan_Lab_Kesling),
+                Sequel.cariIsi("select rekening.tipe from rekening where rekening.kd_rek=?",Utang_Jasa_Analis_Pelayanan_Lab_Kesling),
+                Sequel.cariIsi("select rekening.balance from rekening where rekening.kd_rek=?",Utang_Jasa_Analis_Pelayanan_Lab_Kesling)
+            });
+            tabMode.addRow(new Object[]{" [Debet] Akun Beban KSO Pelayanan Lab Kesehatan Lingkungan Pada Menu Billing Lab Kesling",Beban_KSO_Pelayanan_Lab_Kesling,
+                Sequel.cariIsi("select rekening.nm_rek from rekening where rekening.kd_rek=?",Beban_KSO_Pelayanan_Lab_Kesling),
+                Sequel.cariIsi("select rekening.tipe from rekening where rekening.kd_rek=?",Beban_KSO_Pelayanan_Lab_Kesling),
+                Sequel.cariIsi("select rekening.balance from rekening where rekening.kd_rek=?",Beban_KSO_Pelayanan_Lab_Kesling)
+            });
+            tabMode.addRow(new Object[]{" [Kredit] Akun Utang KSO Pelayanan Lab Kesehatan Lingkungan Pada Menu Billing Lab Kesling",Utang_KSO_Pelayanan_Lab_Kesling,
+                Sequel.cariIsi("select rekening.nm_rek from rekening where rekening.kd_rek=?",Utang_KSO_Pelayanan_Lab_Kesling),
+                Sequel.cariIsi("select rekening.tipe from rekening where rekening.kd_rek=?",Utang_KSO_Pelayanan_Lab_Kesling),
+                Sequel.cariIsi("select rekening.balance from rekening where rekening.kd_rek=?",Utang_KSO_Pelayanan_Lab_Kesling)
+            });
+            tabMode.addRow(new Object[]{" [Debet] Akun Beban Jasa Menejemen Pelayanan Lab Kesehatan Lingkungan Pada Menu Billing Lab Kesling",Beban_Jasa_Menejemen_Pelayanan_Lab_Kesling,
+                Sequel.cariIsi("select rekening.nm_rek from rekening where rekening.kd_rek=?",Beban_Jasa_Menejemen_Pelayanan_Lab_Kesling),
+                Sequel.cariIsi("select rekening.tipe from rekening where rekening.kd_rek=?",Beban_Jasa_Menejemen_Pelayanan_Lab_Kesling),
+                Sequel.cariIsi("select rekening.balance from rekening where rekening.kd_rek=?",Beban_Jasa_Menejemen_Pelayanan_Lab_Kesling)
+            });
+            tabMode.addRow(new Object[]{" [Kredit] Akun Utang Jasa Menejemen Pelayanan Lab Kesehatan Lingkungan Pada Menu Billing Lab Kesling",Utang_Jasa_Menejemen_Pelayanan_Lab_Kesling,
+                Sequel.cariIsi("select rekening.nm_rek from rekening where rekening.kd_rek=?",Utang_Jasa_Menejemen_Pelayanan_Lab_Kesling),
+                Sequel.cariIsi("select rekening.tipe from rekening where rekening.kd_rek=?",Utang_Jasa_Menejemen_Pelayanan_Lab_Kesling),
+                Sequel.cariIsi("select rekening.balance from rekening where rekening.kd_rek=?",Utang_Jasa_Menejemen_Pelayanan_Lab_Kesling)
             });
         }catch(Exception e){
             System.out.println("Notifikasi : "+e);
@@ -2922,5 +3110,23 @@ public class DlgPengaturanRekening extends javax.swing.JDialog {
         }catch(Exception e){
             System.out.println("Notifikasi : "+e);
         }
+    }
+    
+    private void runBackground(Runnable task) {
+        if (ceksukses) return;
+        ceksukses = true;
+
+        this.setCursor(Cursor.getPredefinedCursor(Cursor.WAIT_CURSOR));
+
+        executor.submit(() -> {
+            try {
+                task.run();
+            } finally {
+                ceksukses = false;
+                SwingUtilities.invokeLater(() -> {
+                    this.setCursor(Cursor.getDefaultCursor());
+                });
+            }
+        });
     }
 }

@@ -18,8 +18,11 @@ import java.text.DecimalFormat;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
 import javax.swing.JOptionPane;
 import javax.swing.JTable;
+import javax.swing.SwingUtilities;
 import javax.swing.event.DocumentEvent;
 import javax.swing.table.DefaultTableModel;
 import javax.swing.table.TableColumn;
@@ -46,6 +49,8 @@ public class DlgCariPiutang extends javax.swing.JDialog {
     private String status="",aktifkanbatch="no",nofak="",mem="",ptg="",sat="",bar="",tanggal="",kodedokter="",namadokter="",nomorrm="";
     private int no=0,i=0;
     private boolean sukses=true;
+    private final ExecutorService executor = Executors.newSingleThreadExecutor();
+    private volatile boolean ceksukses = false;
     
     /** Creates new form DlgProgramStudi
      * @param parent
@@ -62,7 +67,7 @@ public class DlgCariPiutang extends javax.swing.JDialog {
         }
         
         tabMode=new DefaultTableModel(null,new Object[]{
-                "No.Nota","Tanggal","Petugas","Pasien","Catatan","Jenis","OngKir","Uang Muka","Piutang","",""
+                "No.Nota","Tanggal","Petugas","Pasien","Catatan","Jenis","PPN","OngKir","Uang Muka","Piutang",""
             }){
               @Override public boolean isCellEditable(int rowIndex, int colIndex){return false;}
         };
@@ -111,19 +116,19 @@ public class DlgCariPiutang extends javax.swing.JDialog {
                 @Override
                 public void insertUpdate(DocumentEvent e) {
                     if(TCari.getText().length()>2){
-                        tampil();
+                        runBackground(() ->tampil());
                     }
                 }
                 @Override
                 public void removeUpdate(DocumentEvent e) {
                     if(TCari.getText().length()>2){
-                        tampil();
+                        runBackground(() ->tampil());
                     }
                 }
                 @Override
                 public void changedUpdate(DocumentEvent e) {
                     if(TCari.getText().length()>2){
-                        tampil();
+                        runBackground(() ->tampil());
                     }
                 }
             });
@@ -452,11 +457,6 @@ public class DlgCariPiutang extends javax.swing.JDialog {
         setDefaultCloseOperation(javax.swing.WindowConstants.DISPOSE_ON_CLOSE);
         setUndecorated(true);
         setResizable(false);
-        addWindowListener(new java.awt.event.WindowAdapter() {
-            public void windowOpened(java.awt.event.WindowEvent evt) {
-                formWindowOpened(evt);
-            }
-        });
 
         internalFrame1.setBorder(javax.swing.BorderFactory.createTitledBorder(javax.swing.BorderFactory.createLineBorder(new java.awt.Color(240, 245, 235)), "::[ Cari Piutang Obat, Alkes & BHP Medis ]::", javax.swing.border.TitledBorder.DEFAULT_JUSTIFICATION, javax.swing.border.TitledBorder.DEFAULT_POSITION, new java.awt.Font("Tahoma", 0, 11), new java.awt.Color(50, 50, 50))); // NOI18N
         internalFrame1.setName("internalFrame1"); // NOI18N
@@ -929,7 +929,7 @@ private void KdKeyPressed(java.awt.event.KeyEvent evt) {//GEN-FIRST:event_TKdKey
     }//GEN-LAST:event_TCariKeyPressed
 
     private void BtnCariActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_BtnCariActionPerformed
-        tampil();
+        runBackground(() ->tampil());
     }//GEN-LAST:event_BtnCariActionPerformed
 
     private void BtnCariKeyPressed(java.awt.event.KeyEvent evt) {//GEN-FIRST:event_BtnCariKeyPressed
@@ -951,7 +951,7 @@ private void KdKeyPressed(java.awt.event.KeyEvent evt) {//GEN-FIRST:event_TKdKey
         nmmem.setText("");
         kdptg.setText("");
         nmptg.setText("");
-        tampil();
+        runBackground(() ->tampil());
     }//GEN-LAST:event_BtnAllActionPerformed
 
     private void BtnAllKeyPressed(java.awt.event.KeyEvent evt) {//GEN-FIRST:event_BtnAllKeyPressed
@@ -964,7 +964,6 @@ private void KdKeyPressed(java.awt.event.KeyEvent evt) {//GEN-FIRST:event_TKdKey
 
     private void BtnPrintActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_BtnPrintActionPerformed
         this.setCursor(Cursor.getPredefinedCursor(Cursor.WAIT_CURSOR));
-        BtnCariActionPerformed(evt);
         if(tabMode.getRowCount()==0){
             JOptionPane.showMessageDialog(null,"Maaf, data sudah habis. Tidak ada data yang bisa anda print...!!!!");
             TCari.requestFocus();
@@ -1054,7 +1053,7 @@ private void ppHapusActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST
         }else{
           try {
               ps=koneksi.prepareStatement(
-                      "select nota_piutang, kd_bangsal from piutang where nota_piutang=?");
+                      "select piutang.nota_piutang, piutang.kd_bangsal from piutang where piutang.nota_piutang=?");
               try {
                  ps.setString(1,tbDokter.getValueAt(tbDokter.getSelectedRow(),0).toString());
                  rs=ps.executeQuery();
@@ -1062,7 +1061,7 @@ private void ppHapusActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST
                      Sequel.AutoComitFalse();
                      sukses=true;
                      ps2=koneksi.prepareStatement(
-                          "select kode_brng,jumlah,no_batch,no_faktur from detailpiutang where nota_piutang=? ");
+                          "select detailpiutang.kode_brng,detailpiutang.jumlah,detailpiutang.no_batch,detailpiutang.no_faktur from detailpiutang where detailpiutang.nota_piutang=? ");
                      try {
                          ps2.setString(1,rs.getString(1));
                          rs2=ps2.executeQuery();
@@ -1075,7 +1074,7 @@ private void ppHapusActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST
                                 Sequel.menyimpan("gudangbarang","'"+rs2.getString("kode_brng") +"','"+rs.getString("kd_bangsal") +"','"+rs2.getString("jumlah") +"','"+rs2.getString("no_batch")+"','"+rs2.getString("no_faktur")+"'", 
                                               "stok=stok+'"+rs2.getString("jumlah") +"'","kode_brng='"+rs2.getString("kode_brng")+"' and kd_bangsal='"+rs.getString("kd_bangsal") +"' and no_batch='"+rs2.getString("no_batch")+"' and no_faktur='"+rs2.getString("no_faktur")+"'");
                              }else{
-                                 Trackobat.catatRiwayat(rs2.getString("kode_brng"),rs2.getDouble("jumlah"),0,"Piutang",akses.getkode(),rs.getString("kd_bangsal"),"Hapus","","",rs.getString("nota_piutang"));
+                                Trackobat.catatRiwayat(rs2.getString("kode_brng"),rs2.getDouble("jumlah"),0,"Piutang",akses.getkode(),rs.getString("kd_bangsal"),"Hapus","","",rs.getString("nota_piutang"));
                                 Sequel.menyimpan("gudangbarang","'"+rs2.getString("kode_brng") +"','"+rs.getString("kd_bangsal") +"','"+rs2.getString("jumlah") +"','',''", 
                                               "stok=stok+'"+rs2.getString("jumlah") +"'","kode_brng='"+rs2.getString("kode_brng")+"' and kd_bangsal='"+rs.getString("kd_bangsal") +"' and no_batch='' and no_faktur=''");
                              } 
@@ -1094,9 +1093,15 @@ private void ppHapusActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST
 
                      if(sukses==true){
                          Sequel.queryu("delete from tampjurnal");
-                         Sequel.menyimpan("tampjurnal","'"+Sequel.cariIsi("select Piutang_Obat from set_akun")+"','PIUTANG PASIEN','0','"+Sequel.cariIsi("select sisapiutang from piutang where nota_piutang='"+rs.getString("nota_piutang")+"'")+"'","Rekening");    
-                         Sequel.menyimpan("tampjurnal","'"+Sequel.cariIsi("select Kontra_Piutang_Obat from set_akun")+"','KAS DI TANGAN','"+Sequel.cariIsi("select sisapiutang  from piutang where nota_piutang='"+rs.getString("nota_piutang")+"'")+"','0'","Rekening"); 
-                         sukses=jur.simpanJurnal(rs.getString("nota_piutang"),"U","BATAL PIUTANG OBAT DI "+Sequel.cariIsi("select bangsal.nm_bangsal from bangsal where bangsal.kd_bangsal='"+rs.getString("kd_bangsal")+"'").toUpperCase()+", OLEH "+akses.getkode());
+                         if(Sequel.menyimpantf2("tampjurnal","'"+Sequel.cariIsi("select Piutang_Obat from set_akun")+"','PIUTANG PASIEN','0','"+Sequel.cariIsi("select sisapiutang from piutang where nota_piutang='"+rs.getString("nota_piutang")+"'")+"'","Rekening")==false){
+                            sukses=false;
+                         }    
+                         if(Sequel.menyimpantf2("tampjurnal","'"+Sequel.cariIsi("select Kontra_Piutang_Obat from set_akun")+"','KAS DI TANGAN','"+Sequel.cariIsi("select sisapiutang  from piutang where nota_piutang='"+rs.getString("nota_piutang")+"'")+"','0'","Rekening")==false){
+                            sukses=false;
+                         } 
+                         if(sukses==true){
+                            sukses=jur.simpanJurnal(rs.getString("nota_piutang"),"U","BATAL PIUTANG OBAT DI "+Sequel.cariIsi("select bangsal.nm_bangsal from bangsal where bangsal.kd_bangsal='"+rs.getString("kd_bangsal")+"'").toUpperCase()+", OLEH "+akses.getkode());
+                         }
                      }
 
                      if(sukses==true){
@@ -1110,7 +1115,7 @@ private void ppHapusActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST
 
                      Sequel.AutoComitTrue();
                      if(sukses==true){
-                         tampil();
+                         runBackground(() ->tampil());
                      }   
                  } 
               } catch (Exception e) {
@@ -1129,10 +1134,6 @@ private void ppHapusActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST
         }
     }
 }//GEN-LAST:event_ppHapusActionPerformed
-
-    private void formWindowOpened(java.awt.event.WindowEvent evt) {//GEN-FIRST:event_formWindowOpened
-        tampil();
-    }//GEN-LAST:event_formWindowOpened
 
     private void MnDetailCicilanActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_MnDetailCicilanActionPerformed
         if(tabMode.getRowCount()==0){
@@ -1477,7 +1478,7 @@ private void ppHapusActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST
                     "select piutang.nota_piutang, piutang.tgl_piutang, "+
                     "piutang.nip,petugas.nama, "+
                     "piutang.no_rkm_medis,piutang.nm_pasien, "+
-                    "piutang.catatan,piutang.jns_jual,piutang.ongkir,"+
+                    "piutang.catatan,piutang.jns_jual,piutang.ppn,piutang.ongkir,"+
                     "piutang.uangmuka,piutang.sisapiutang,piutang.tgltempo,bangsal.nm_bangsal  "+
                     "from piutang inner join petugas on piutang.nip=petugas.nip "+
                     "inner join bangsal on piutang.kd_bangsal=bangsal.kd_bangsal "+
@@ -1496,11 +1497,11 @@ private void ppHapusActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST
             try {
                 rs=ps.executeQuery();
                 while(rs.next()){
-                    tabMode.addRow(new String[]{
-                        rs.getString(1),rs.getString(2),rs.getString(3)+", "+rs.getString(4),rs.getString(5)+", "+rs.getString(6),rs.getString(7),rs.getString(8),df2.format(rs.getDouble(9)),df2.format(rs.getDouble(10)),df2.format(rs.getDouble(11)),"",""
+                    tabMode.addRow(new Object[]{
+                        rs.getString(1),rs.getString(2),rs.getString(3)+", "+rs.getString(4),rs.getString(5)+", "+rs.getString(6),rs.getString(7),rs.getString(8),df2.format(rs.getDouble(9)),df2.format(rs.getDouble(10)),df2.format(rs.getDouble(11)),df2.format(rs.getDouble(12)),""
                     });
                     
-                    tabMode.addRow(new String[]{"","No.Batch","No.Faktur","Piutang di "+rs.getString(13),"Satuan","Harga","Jml","Subtotal","Disk(%)","Diskon(Rp)","Total"});
+                    tabMode.addRow(new Object[]{"","No.Batch","No.Faktur","Piutang di "+rs.getString(13),"Satuan","Harga","Jml","Subtotal","Disk(%)","Diskon(Rp)","Total"});
 
                     subttlall=0;
                     subttldisc=0;
@@ -1527,7 +1528,7 @@ private void ppHapusActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST
                             subttldisc=subttldisc+rs2.getDouble(9);
                             ttljual=ttljual+rs2.getDouble(10);
                             subttljual=subttljual+rs2.getDouble(10);
-                            tabMode.addRow(new String[]{
+                            tabMode.addRow(new Object[]{
                                 "",no+". "+rs2.getString("no_batch"),rs2.getString("no_faktur"),rs2.getString("kode_brng")+" "+rs2.getString("nama_brng")+" "+rs2.getString("aturan_pakai"),
                                 rs2.getString("satuan"),df2.format(rs2.getDouble("h_jual")),rs2.getString("jumlah"),df2.format(rs2.getDouble("subtotal")),
                                 rs2.getString("dis"),df2.format(rs2.getDouble("bsr_dis")),df2.format(rs2.getDouble("total"))
@@ -1546,16 +1547,16 @@ private void ppHapusActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST
                     }
                         
                     cicilan=Sequel.cariIsiAngka("select (sum(bayar_piutang.besar_cicilan)+sum(bayar_piutang.diskon_piutang)+sum(bayar_piutang.tidak_terbayar)) from bayar_piutang where bayar_piutang.no_rawat='"+rs.getString(1)+"' ");
-                    sisapiutang=rs.getDouble(11)-cicilan;
+                    sisapiutang=rs.getDouble(12)-cicilan;
                     if(sisapiutang<1){
                         status="Lunas";
                     }else if(sisapiutang>1){
-                        telat=Sequel.cariIsiAngka("select TO_DAYS('"+rs.getString(12)+"')-TO_DAYS(current_date()) as day");                                                
+                        telat=Sequel.cariIsiAngka("select TO_DAYS('"+rs.getString(13)+"')-TO_DAYS(current_date()) as day");                                                
                         status="Belum Lunas"+(telat<0?", Telat Bayar":"");
                     }
-                    tabMode.addRow(new String[]{"","Total",":","","",""," ",df2.format(subttlall),"",df2.format(subttldisc),df2.format(subttljual)});    
-                    tabMode.addRow(new String[]{"","Jatuh Tempo",": "+rs.getString(12),"Cicilan+Diskon Bayar+Tidak Terbayar",":","","","","","",df2.format(cicilan)});  
-                    tabMode.addRow(new String[]{"","Status",": "+status,"Sisa Piutang",":","","","","","",df2.format(sisapiutang)}); 
+                    tabMode.addRow(new Object[]{"","Total",":","","",""," ",df2.format(subttlall),"",df2.format(subttldisc),df2.format(subttljual)});    
+                    tabMode.addRow(new Object[]{"","Jatuh Tempo",": "+rs.getString(13),"Cicilan+Diskon Bayar+Tidak Terbayar",":","","","","","",df2.format(cicilan)});  
+                    tabMode.addRow(new Object[]{"","Status",": "+status,"Sisa Piutang",":","","","","","",df2.format(sisapiutang)}); 
                 }  
             } catch (Exception e) {
                 System.out.println("Notif : "+e);
@@ -1585,7 +1586,7 @@ private void ppHapusActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST
         NoNota.setText(notagihan);
         Tgl1.setDate(Taggal);
         Tgl2.setDate(Taggal);
-        tampil();
+        runBackground(() ->tampil());
     }
     public void isCek(){
         MnDetailCicilan.setEnabled(akses.getbayar_piutang());
@@ -1597,5 +1598,22 @@ private void ppHapusActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST
             ppHapus.setEnabled(false);
         }  
     }
- 
+    
+    private void runBackground(Runnable task) {
+        if (ceksukses) return;
+        ceksukses = true;
+
+        this.setCursor(Cursor.getPredefinedCursor(Cursor.WAIT_CURSOR));
+
+        executor.submit(() -> {
+            try {
+                task.run();
+            } finally {
+                ceksukses = false;
+                SwingUtilities.invokeLater(() -> {
+                    this.setCursor(Cursor.getDefaultCursor());
+                });
+            }
+        });
+    }
 }

@@ -4,14 +4,18 @@ import fungsi.koneksiDB;
 import fungsi.sekuel;
 import fungsi.validasi;
 import fungsi.akses;
+import java.awt.Cursor;
 import java.awt.Dimension;
 import java.awt.event.KeyEvent;
 import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.util.Properties;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
 import javax.swing.JOptionPane;
 import javax.swing.JTable;
+import javax.swing.SwingUtilities;
 import javax.swing.table.DefaultTableModel;
 import javax.swing.table.TableColumn;
 
@@ -23,7 +27,8 @@ public class DlgCariPermintaanResepPulang extends javax.swing.JDialog {
     private PreparedStatement ps,ps2;
     private ResultSet rs,rs2;
     private String norm="",kddokter="";
-    private final Properties prop = new Properties();
+    private final ExecutorService executor = Executors.newSingleThreadExecutor();
+    private volatile boolean ceksukses = false;
     
     /** Creates new form 
      * @param parent
@@ -220,12 +225,12 @@ public class DlgCariPermintaanResepPulang extends javax.swing.JDialog {
     }// </editor-fold>//GEN-END:initComponents
 
     private void BtnCariActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_BtnCariActionPerformed
-        tampil();
+        runBackground(() ->tampil());
 }//GEN-LAST:event_BtnCariActionPerformed
 
     private void BtnCariKeyPressed(java.awt.event.KeyEvent evt) {//GEN-FIRST:event_BtnCariKeyPressed
         if(evt.getKeyCode()==KeyEvent.VK_SPACE){
-            tampil();
+            runBackground(() ->tampil());
         }else{
             Valid.pindah(evt, DTPCari1,BtnKeluar);
         }
@@ -247,7 +252,7 @@ private void KdKeyPressed(java.awt.event.KeyEvent evt) {//GEN-FIRST:event_TKdKey
 */
 
     private void ChkTanggalItemStateChanged(java.awt.event.ItemEvent evt) {//GEN-FIRST:event_ChkTanggalItemStateChanged
-        tampil();
+        runBackground(() ->tampil());
     }//GEN-LAST:event_ChkTanggalItemStateChanged
 
     private void BtnHapusActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_BtnHapusActionPerformed
@@ -260,7 +265,7 @@ private void KdKeyPressed(java.awt.event.KeyEvent evt) {//GEN-FIRST:event_TKdKey
                 JOptionPane.showMessageDialog(rootPane,"Silahkan pilih No.Permintaan yang mau dihapus ..!!");
             }else {
                 Sequel.meghapus("permintaan_resep_pulang","no_permintaan",tbPemisahan.getValueAt(tbPemisahan.getSelectedRow(),0).toString()); 
-                tampil();               
+                runBackground(() ->tampil());               
             }
         }
     }//GEN-LAST:event_BtnHapusActionPerformed
@@ -334,11 +339,11 @@ private void KdKeyPressed(java.awt.event.KeyEvent evt) {//GEN-FIRST:event_TKdKey
                 }                
                 rs=ps.executeQuery();
                 while(rs.next()){
-                    tabMode.addRow(new String[]{
+                    tabMode.addRow(new Object[]{
                         rs.getString("no_permintaan"),rs.getString("tgl_permintaan"),rs.getString("jam"),rs.getString("no_rawat"),
                         rs.getString("no_rkm_medis"),rs.getString("nm_pasien"),rs.getString("nm_dokter"),rs.getString("kd_dokter")
                     });  
-                    tabMode.addRow(new String[]{"","Jumlah","Satuan","Aturan Pakai","Kode Obat","Nama Obat","",""});                
+                    tabMode.addRow(new Object[]{"","Jumlah","Satuan","Aturan Pakai","Kode Obat","Nama Obat","",""});                
                     ps2=koneksi.prepareStatement("select databarang.kode_brng,databarang.nama_brng,detail_permintaan_resep_pulang.jml,"+
                         "databarang.kode_sat,detail_permintaan_resep_pulang.dosis "+
                         "from detail_permintaan_resep_pulang inner join databarang on "+
@@ -347,7 +352,7 @@ private void KdKeyPressed(java.awt.event.KeyEvent evt) {//GEN-FIRST:event_TKdKey
                         ps2.setString(1,rs.getString("no_permintaan"));
                         rs2=ps2.executeQuery();
                         while(rs2.next()){
-                            tabMode.addRow(new String[]{
+                            tabMode.addRow(new Object[]{
                                 "",rs2.getString("jml"),rs2.getString("kode_sat"),rs2.getString("dosis"),rs2.getString("kode_brng"),rs2.getString("nama_brng"),"",""
                             });
                         }
@@ -384,5 +389,23 @@ private void KdKeyPressed(java.awt.event.KeyEvent evt) {//GEN-FIRST:event_TKdKey
     public void setRM(String norm,String kodedokter){
         this.norm=norm;
         this.kddokter=kodedokter;
+    }
+    
+    private void runBackground(Runnable task) {
+        if (ceksukses) return;
+        ceksukses = true;
+
+        this.setCursor(Cursor.getPredefinedCursor(Cursor.WAIT_CURSOR));
+
+        executor.submit(() -> {
+            try {
+                task.run();
+            } finally {
+                ceksukses = false;
+                SwingUtilities.invokeLater(() -> {
+                    this.setCursor(Cursor.getDefaultCursor());
+                });
+            }
+        });
     }
 }

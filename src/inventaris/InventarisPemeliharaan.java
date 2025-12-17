@@ -47,8 +47,6 @@ public final class InventarisPemeliharaan extends javax.swing.JDialog {
     private PreparedStatement ps;
     private ResultSet rs;
     private DlgCariPetugas petugas=new DlgCariPetugas(null,false);
-    private InventarisKoleksi inventaris=new InventarisKoleksi(null,false);
-    private InventarisRuang ruang=new InventarisRuang(null,false); 
     private boolean semua;
     private double total;
 
@@ -108,79 +106,6 @@ public final class InventarisPemeliharaan extends javax.swing.JDialog {
         
         ChkInput.setSelected(false);
         isForm(); 
-        
-        inventaris.addWindowListener(new WindowListener() {
-            @Override
-            public void windowOpened(WindowEvent e) {}
-            @Override
-            public void windowClosing(WindowEvent e) {}
-            @Override
-            public void windowClosed(WindowEvent e) {
-                if(inventaris.getTable().getSelectedRow()!= -1){     
-                   NoInventaris.setText(inventaris.getTable().getValueAt(inventaris.getTable().getSelectedRow(),0).toString());
-                   KodeBarang.setText(inventaris.getTable().getValueAt(inventaris.getTable().getSelectedRow(),1).toString());
-                   NamaBarang.setText(inventaris.getTable().getValueAt(inventaris.getTable().getSelectedRow(),2).toString());
-                   UraianKegiatan.requestFocus();
-                }                
-            }
-            @Override
-            public void windowIconified(WindowEvent e) {}
-            @Override
-            public void windowDeiconified(WindowEvent e) {}
-            @Override
-            public void windowActivated(WindowEvent e) {}
-            @Override
-            public void windowDeactivated(WindowEvent e) {}
-        });
-        
-        inventaris.getTable().addKeyListener(new KeyListener() {
-            @Override
-            public void keyTyped(KeyEvent e) {}
-            @Override
-            public void keyPressed(KeyEvent e) {
-                if(e.getKeyCode()==KeyEvent.VK_SPACE){
-                    inventaris.dispose();
-                }
-            }
-            @Override
-            public void keyReleased(KeyEvent e) {}
-        });
-        
-        ruang.addWindowListener(new WindowListener() {
-            @Override
-            public void windowOpened(WindowEvent e) {}
-            @Override
-            public void windowClosing(WindowEvent e) {}
-            @Override
-            public void windowClosed(WindowEvent e) {
-                if(ruang.getTable().getSelectedRow()!= -1){ 
-                    nm_ruangcari.setText(ruang.getTable().getValueAt(ruang.getTable().getSelectedRow(),1).toString());
-                    TCari.requestFocus();
-                }                   
-            }
-            @Override
-            public void windowIconified(WindowEvent e) {}
-            @Override
-            public void windowDeiconified(WindowEvent e) {}
-            @Override
-            public void windowActivated(WindowEvent e) {}
-            @Override
-            public void windowDeactivated(WindowEvent e) {}
-
-        });
-        
-        ruang.getTable().addKeyListener(new KeyListener() {
-            @Override
-            public void keyTyped(KeyEvent e) {}
-            @Override
-            public void keyPressed(KeyEvent e) {
-                if(e.getKeyCode()==KeyEvent.VK_SPACE){
-                    ruang.dispose();
-                }                
-            }
-            @Override
-            public void keyReleased(KeyEvent e) {}
-        });
         
         if(koneksiDB.CARICEPAT().equals("aktif")){
             TCari.getDocument().addDocumentListener(new javax.swing.event.DocumentListener(){
@@ -463,7 +388,7 @@ public final class InventarisPemeliharaan extends javax.swing.JDialog {
         jLabel19.setBounds(6, 10, 54, 23);
 
         DTPCari1.setForeground(new java.awt.Color(50, 70, 50));
-        DTPCari1.setModel(new javax.swing.DefaultComboBoxModel(new String[] { "15-09-2020" }));
+        DTPCari1.setModel(new javax.swing.DefaultComboBoxModel(new String[] { "23-04-2025" }));
         DTPCari1.setDisplayFormat("dd-MM-yyyy");
         DTPCari1.setName("DTPCari1"); // NOI18N
         DTPCari1.setOpaque(false);
@@ -479,7 +404,7 @@ public final class InventarisPemeliharaan extends javax.swing.JDialog {
         jLabel21.setBounds(160, 10, 23, 23);
 
         DTPCari2.setForeground(new java.awt.Color(50, 70, 50));
-        DTPCari2.setModel(new javax.swing.DefaultComboBoxModel(new String[] { "15-09-2020" }));
+        DTPCari2.setModel(new javax.swing.DefaultComboBoxModel(new String[] { "23-04-2025" }));
         DTPCari2.setDisplayFormat("dd-MM-yyyy");
         DTPCari2.setName("DTPCari2"); // NOI18N
         DTPCari2.setOpaque(false);
@@ -599,7 +524,7 @@ public final class InventarisPemeliharaan extends javax.swing.JDialog {
         FormInput.add(label8);
         label8.setBounds(250, 100, 130, 23);
 
-        Tanggal.setModel(new javax.swing.DefaultComboBoxModel(new String[] { "15-09-2020" }));
+        Tanggal.setModel(new javax.swing.DefaultComboBoxModel(new String[] { "23-04-2025" }));
         Tanggal.setDisplayFormat("dd-MM-yyyy");
         Tanggal.setName("Tanggal"); // NOI18N
         Tanggal.setOpaque(false);
@@ -973,6 +898,42 @@ private void TanggalKeyPressed(java.awt.event.KeyEvent evt) {//GEN-FIRST:event_T
     }//GEN-LAST:event_formWindowOpened
 
     private void btnRuang1ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btnRuang1ActionPerformed
+        InventarisRuang ruang=new InventarisRuang(null,false);
+        ruang.addWindowListener(new WindowListener() {
+            @Override
+            public void windowOpened(WindowEvent e) {}
+            @Override
+            public void windowClosing(WindowEvent e) {}
+            @Override
+            public void windowClosed(WindowEvent e) {
+                if(ruang.getTable().getSelectedRow()!= -1){ 
+                    nm_ruangcari.setText(ruang.getTable().getValueAt(ruang.getTable().getSelectedRow(),1).toString());
+                    TCari.requestFocus();
+                }                   
+            }
+            @Override
+            public void windowIconified(WindowEvent e) {}
+            @Override
+            public void windowDeiconified(WindowEvent e) {}
+            @Override
+            public void windowActivated(WindowEvent e) {}
+            @Override
+            public void windowDeactivated(WindowEvent e) {}
+
+        });
+        
+        ruang.getTable().addKeyListener(new KeyListener() {
+            @Override
+            public void keyTyped(KeyEvent e) {}
+            @Override
+            public void keyPressed(KeyEvent e) {
+                if(e.getKeyCode()==KeyEvent.VK_SPACE){
+                    ruang.dispose();
+                }                
+            }
+            @Override
+            public void keyReleased(KeyEvent e) {}
+        });
         ruang.isCek();
         ruang.setSize(internalFrame1.getWidth()-20,internalFrame1.getHeight()-20);
         ruang.setLocationRelativeTo(internalFrame1);
@@ -992,6 +953,43 @@ private void TanggalKeyPressed(java.awt.event.KeyEvent evt) {//GEN-FIRST:event_T
     }//GEN-LAST:event_tbJnsPerawatanKeyReleased
 
     private void btnInvActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btnInvActionPerformed
+        InventarisCariKoleksi inventaris=new InventarisCariKoleksi(null,false);
+        inventaris.addWindowListener(new WindowListener() {
+            @Override
+            public void windowOpened(WindowEvent e) {}
+            @Override
+            public void windowClosing(WindowEvent e) {}
+            @Override
+            public void windowClosed(WindowEvent e) {
+                if(inventaris.getTable().getSelectedRow()!= -1){     
+                   NoInventaris.setText(inventaris.getTable().getValueAt(inventaris.getTable().getSelectedRow(),0).toString());
+                   KodeBarang.setText(inventaris.getTable().getValueAt(inventaris.getTable().getSelectedRow(),1).toString());
+                   NamaBarang.setText(inventaris.getTable().getValueAt(inventaris.getTable().getSelectedRow(),2).toString());
+                   UraianKegiatan.requestFocus();
+                }                
+            }
+            @Override
+            public void windowIconified(WindowEvent e) {}
+            @Override
+            public void windowDeiconified(WindowEvent e) {}
+            @Override
+            public void windowActivated(WindowEvent e) {}
+            @Override
+            public void windowDeactivated(WindowEvent e) {}
+        });
+        
+        inventaris.getTable().addKeyListener(new KeyListener() {
+            @Override
+            public void keyTyped(KeyEvent e) {}
+            @Override
+            public void keyPressed(KeyEvent e) {
+                if(e.getKeyCode()==KeyEvent.VK_SPACE){
+                    inventaris.dispose();
+                }
+            }
+            @Override
+            public void keyReleased(KeyEvent e) {}
+        });
         inventaris.tampil();
         inventaris.isCek();
         inventaris.setSize(internalFrame1.getWidth()-20,internalFrame1.getHeight()-20);
@@ -1137,14 +1135,14 @@ private void TanggalKeyPressed(java.awt.event.KeyEvent evt) {//GEN-FIRST:event_T
                 total=0;
                 while(rs.next()){
                     total=total+rs.getDouble("biaya");
-                    tabMode.addRow(new String[]{
+                    tabMode.addRow(new Object[]{
                         rs.getString("no_inventaris"),rs.getString("kode_barang"),rs.getString("nama_barang"),
                         rs.getString("nama_ruang"),rs.getString("nip"),rs.getString("nama"),rs.getString("uraian_kegiatan"),rs.getString("tanggal"),
                         rs.getString("pelaksana"),Valid.SetAngka(rs.getDouble("biaya")),rs.getString("jenis_pemeliharaan")
                     });
                 }
                 if(total>0){
-                    tabMode.addRow(new String[]{
+                    tabMode.addRow(new Object[]{
                         "","","","","","","Total Biaya : ","","",Valid.SetAngka(total),""
                     });
                 }
